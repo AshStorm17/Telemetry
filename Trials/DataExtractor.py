@@ -33,64 +33,116 @@ class HealthMonitoringSwitch(OVSKernelSwitch):
     def capture_initial_stats(self):
         """Captures the initial port statistics."""
         self.initial_stats = self._get_port_stats()
+        # Give a moment for the network to stabilize after capturing stats
+        time.sleep(0.5)
 
     def _get_port_stats(self):
         """Retrieves current port statistics using ovs-ofctl."""
         stats = {}
         output = self.cmd(f'ovs-ofctl dump-ports {self.name}')
-        info(f"--- Output of ovs-ofctl dump-ports on {self.name} ---\n{output}\n--- End of Output ---")  # Debug output
+        info(f"--- Output of ovs-ofctl dump-ports on {self.name} ---\n{output}\n--- End of Output ---")
+        
+        # First identify port sections
+        port_sections = []
+        current_section = []
+        in_port_section = False
+        
         for line in output.splitlines():
-            if 'port ' in line:
-                parts = line.split()
-                info(f"Processing line: {line}")  # Debug output
-                port_num = None
-                if len(parts) > 1:
-                    if parts[1] == 'LOCAL:':
-                        port_num = 0  # Assign 0 for the LOCAL port
-                        info(f"  Identified LOCAL port as port number: {port_num}") # Debug output
-                    elif '"' in parts[1]:
-                        interface_name_with_colon = parts[1].strip('"')
-                        interface_name = interface_name_with_colon.split(':')[0]
-                        info(f"  Found interface name: {interface_name}") # Debug output
-                        if self.name in interface_name and 'eth' in interface_name:
-                            try:
-                                port_num = int(interface_name.split('eth')[1])
-                                info(f"    Inferred port number from interface name: {port_num}") # Debug output
-                            except ValueError:
-                                info(f"    Could not infer port number from '{interface_name}'.") # Debug output
-                        else:
-                            info(f"    Interface name '{interface_name}' does not match expected pattern.") # Debug output
-                    elif parts[1].isdigit():
-                        port_num = int(parts[1])
-                        info(f"  Extracted port number (direct): {port_num}") # Debug output
-                    else:
-                        info(f"  Could not identify port information in '{parts[1]}'.") # Debug output
-
-                if port_num is not None:
-                    rx_packets_match = re.search(r'rx pkts=(\d+)', line)
-                    rx_bytes_match = re.search(r'rx bytes=(\d+)', line)
-                    tx_packets_match = re.search(r'tx pkts=(\d+)', line)
-                    tx_bytes_match = re.search(r'tx bytes=(\d+)', line)
-                    rx_errors_match = re.search(r'errs=(\d+)', line) # Changed to 'errs'
-                    tx_errors_match = re.search(r'errs=\d+, .* tx pkts=\d+, bytes=\d+, drop=\d+, errs=(\d+)', line) # More specific TX error match
-
-                    rx_errors = int(rx_errors_match.group(1)) if rx_errors_match else 0
-                    tx_errors = int(tx_errors_match.group(1)) if tx_errors_match else 0
-
-                    if all([rx_packets_match, rx_bytes_match, tx_packets_match, tx_bytes_match]):
-                        stats[port_num] = {
-                            'rx_packets': int(rx_packets_match.group(1)),
-                            'rx_bytes': int(rx_bytes_match.group(1)),
-                            'tx_packets': int(tx_packets_match.group(1)),
-                            'tx_bytes': int(tx_bytes_match.group(1)),
-                            'rx_errors': rx_errors,
-                            'tx_errors': tx_errors,
-                        }
-                        info(f"    Successfully parsed stats for port {port_num}: {stats[port_num]}") # Debug output
-                    else:
-                        info(f"    Could not parse all stats for line: {line}") # Debug output
-                else:
-                    info(f"    Skipping line as port number could not be identified.") # Debug output
+            # Start of a new port section
+            if line.strip().startswith("port "):
+                if in_port_section and current_section:
+                    port_sections.append(current_section)
+                current_section = [line]
+                in_port_section = True
+            elif in_port_section and line.strip():
+                current_section.append(line)
+        
+        # Add the last section if any
+        if in_port_section and current_section:
+            port_sections.append(current_section)
+            
+        # Process each port section
+        for section in port_sections:
+            if not section:
+                continue
+                
+            # Extract port number/name
+            port_line = section[0]
+            port_match = re.search(r'port\s+(?:"([^"]+)"|(\d+)):', port_line)
+            
+            if not port_match:
+                continue
+                
+            port_name = port_match.group(1)
+            port_num_str = port_match.group(2)
+            
+            port_num = None
+            if port_num_str and port_num_str.isdigit():
+                port_num = int(port_num_str)
+            elif port_name:
+                if port_name == "LOCAL":
+                    port_num = 0
+                elif 'eth' in port_name:
+                    try:
+                        port_num = int(port_name.split('-eth')[1])
+                    except (ValueError, IndexError):
+                        continue
+            
+            if port_num is None:
+                continue
+                
+            # Join all lines for easier regex
+            section_text = '\n'.join(section)
+            
+            # Extract statistics
+            rx_packets = 0
+            rx_bytes = 0
+            tx_packets = 0 
+            tx_bytes = 0
+            rx_errors = 0
+            tx_errors = 0
+            
+            # RX stats - match the exact format in the output
+            rx_pkts_match = re.search(r'rx pkts=(\d+)', section_text)
+            if rx_pkts_match:
+                rx_packets = int(rx_pkts_match.group(1))
+                
+            # Look for format "rx pkts=X, bytes=Y"
+            rx_bytes_match = re.search(r'rx pkts=\d+, bytes=(\d+)', section_text)
+            if rx_bytes_match:
+                rx_bytes = int(rx_bytes_match.group(1))
+                
+            rx_errs_match = re.search(r'errs=(\d+)', section_text)
+            if rx_errs_match:
+                rx_errors = int(rx_errs_match.group(1))
+                
+            # TX stats - match the exact format in the output
+            tx_pkts_match = re.search(r'tx pkts=(\d+)', section_text)
+            if tx_pkts_match:
+                tx_packets = int(tx_pkts_match.group(1))
+                
+            # Look for format "tx pkts=X, bytes=Y"
+            tx_bytes_match = re.search(r'tx pkts=\d+, bytes=(\d+)', section_text)
+            if tx_bytes_match:
+                tx_bytes = int(tx_bytes_match.group(1))
+                
+            # Match TX errors on the TX line
+            tx_errs_match = re.search(r'tx .*errs=(\d+)', section_text)
+            if tx_errs_match:
+                tx_errors = int(tx_errs_match.group(1))
+            
+            # Save the stats
+            stats[port_num] = {
+                'rx_packets': rx_packets,
+                'rx_bytes': rx_bytes,
+                'tx_packets': tx_packets,
+                'tx_bytes': tx_bytes,
+                'rx_errors': rx_errors,
+                'tx_errors': tx_errors,
+            }
+            
+            info(f"    Successfully parsed stats for port {port_num}: {stats[port_num]}")
+        
         return stats
 
     def get_health_parameters(self, duration=5):
@@ -119,11 +171,14 @@ class HealthMonitoringSwitch(OVSKernelSwitch):
                 rx_error_rate = (current['rx_errors'] - initial['rx_errors']) / elapsed_time
                 tx_error_rate = (current['tx_errors'] - initial['tx_errors']) / elapsed_time
 
+                # Calculate rates and convert bytes to KB for better readability
                 health_data[port] = {
                     'rx_packet_rate': rx_packet_rate,
                     'rx_byte_rate': rx_byte_rate,
+                    'rx_kb_rate': rx_byte_rate / 1024,  # Convert to KB/s
                     'tx_packet_rate': tx_packet_rate,
                     'tx_byte_rate': tx_byte_rate,
+                    'tx_kb_rate': tx_byte_rate / 1024,  # Convert to KB/s
                     'rx_error_rate': rx_error_rate,
                     'tx_error_rate': tx_error_rate,
                 }
@@ -242,29 +297,33 @@ if __name__ == '__main__':
     uptime_hours = uptime_minutes / 60
     print(f"Uptime (of Mininet host): {int(uptime_hours)} hours, {int(uptime_minutes % 60)} minutes, {int(uptime_seconds % 60)} seconds")
 
+    # Get flow count
+    get_flow_count(net)
+
     # Start continuous iperf traffic in the background
     info("\n*** Starting continuous iperf traffic from h1 to h2...\n")
     iperf_server_process = h2.popen('iperf -s -p 5001')
-    time.sleep(0.5) # Give server time to start
-    iperf_client_process = h1.popen('iperf -c %s -p 5001 -b 5M' % h2.IP()) # Send at 5 Mbps
+    time.sleep(0.5)  # Give server time to start
+    # Start continuous traffic for 1 hour with bandwidth of 20Mbps and print interval of 10 seconds
+    # Using UDP (-u) to ensure consistent traffic generation
+    iperf_client_process = h1.popen('iperf -c %s -p 5001 -t 3600 -b 20M -i 10 -u' % h2.IP())
 
     try:
         print("\n--- Printing Health Parameters every 5 seconds ---")
         while True:
             print(f"\n--- Health Data at {time.strftime('%Y-%m-%d %H:%M:%S')} ---")
             health_data = s1.get_health_parameters(duration=5)
-            # for port, data in health_data.items():
-            #     if isinstance(data, dict):
-            #         print(f"  Port {port}:")
-            #         print(f"    RX Packet Rate: {data['rx_packet_rate']:.2f} p/s")
-            #         print(f"    RX Byte Rate: {data['rx_byte_rate']:.2f} B/s")
-            #         print(f"    TX Packet Rate: {data['tx_packet_rate']:.2f} p/s")
-            #         print(f"    TX Byte Rate: {data['tx_byte_rate']:.2f} B/s")
-            #         print(f"    RX Error Rate: {data['rx_error_rate']:.2f} errors/s")
-            #         print(f"    TX Error Rate: {data['tx_error_rate']:.2f} errors/s")
-            #     else:
-            #         # print(f"  Port {port}: {data}")
-            #         print("HAHA")
+            for port, data in health_data.items():
+                if isinstance(data, dict) and "error" not in data:
+                    print(f"  Port {port}:")
+                    print(f"    RX Packet Rate: {data['rx_packet_rate']:.2f} p/s")
+                    print(f"    RX Byte Rate: {data['rx_byte_rate']:.2f} B/s ({data['rx_kb_rate']:.2f} KB/s)")
+                    print(f"    TX Packet Rate: {data['tx_packet_rate']:.2f} p/s")
+                    print(f"    TX Byte Rate: {data['tx_byte_rate']:.2f} B/s ({data['tx_kb_rate']:.2f} KB/s)")
+                    print(f"    RX Error Rate: {data['rx_error_rate']:.2f} errors/s")
+                    print(f"    TX Error Rate: {data['tx_error_rate']:.2f} errors/s")
+                else:
+                    print(f"  Port {port}: {data}")
             time.sleep(5)
 
     except KeyboardInterrupt:
