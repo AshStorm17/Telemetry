@@ -11,6 +11,9 @@ import socket
 # Import the HealthMonitoringSwitch from our separate module
 from health_switch import HealthMonitoringSwitch
 
+# Import End2End
+from packet_processor import end2end_cc2dc
+
 # --- Payload Building Function (Readable Version) ---
 def build_payload(is_switch, mac, port_stats, timestamp):
     """
@@ -127,23 +130,31 @@ def simpleTest():
     cc = net.get('cc')
     h2 = net.get('h2')
 
-    # Capture all packets excluding ICMP, MDNS, and ARP
-    cc.cmd('tcpdump -i any -v -w all_packets.pcap not icmp6 and not port 5353 and not arp &')
+
+    # Generate some traffic between h1 and h2 (to produce non-zero counters)
+    h2.cmd('iperf -s -u -i 1 > iperf_server_output &')
+    time.sleep(1)
+    h1.cmd('iperf -c ' + h2.IP() + ' -u -t 30 -b 10m &')
+    time.sleep(1)
 
     # Create an EnhancedSwitch instance (telemetry host + monitoring switch)
     enhanced_switch = EnhancedSwitch(s1h, s1, parameters={})
+
+
+
+    # Capture all packets excluding ICMP, MDNS, and ARP
+    cc.cmd('tcpdump -i any -v -w all_packets.pcap not icmp6 and not port 5353 and not arp &')
     
     # Send telemetry packets multiple times
     for _ in range(5):
         enhanced_switch.send_health_parameters(cc)
         time.sleep(5)
-        cc.cmd('python filter_packets.py')
+    cc.cmd('killall tcpdump')
+    end2end_cc2dc('all_packets.pcap', 'cc1')
 
-    # Generate some traffic between h1 and h2 (to produce non-zero counters)
-    h2.cmd('iperf -s -u -i 1 > iperf_server_output &')
-    time.sleep(1)
-    h1.cmd('iperf -c ' + h2.IP() + ' -u -t 3 -b 10m')
-    time.sleep(1)
+    
+
+    h2.cmd('killall iperf')
 
     net.stop()
 
