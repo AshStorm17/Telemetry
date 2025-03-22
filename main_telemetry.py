@@ -10,15 +10,11 @@ import socket
 
 # Import the HealthMonitoringSwitch from our separate module
 from health_switch import HealthMonitoringSwitch
-
-# Import End2End
 from packet_processor import end2end_cc2dc
 
 # --- Payload Building Function (Readable Version) ---
 def build_payload(is_switch, mac, port_stats, timestamp):
-    """
-    Build a human-readable payload string with ASCII markers and detailed text.
-    """
+
     header_lines = []
     header_lines.append("PACKET STARTED")
     header_lines.append(f"Is Switch: {is_switch}")
@@ -30,7 +26,9 @@ def build_payload(is_switch, mac, port_stats, timestamp):
     for port in port_stats:
         port_lines.append(
             f"Port {port['port_id']}: Rxpkts={port['rxpkts']}, Rxbytes={port['rxbytes']}, "
-            f"Rxerrs={port['rxerrs']}, Txpkts={port['txpkts']}, Txbytes={port['txbytes']}, Txerrs={port['txerrs']}"
+            f"Rxerrs={port['rxerrs']}, Txpkts={port['txpkts']}, Txbytes={port['txbytes']}, Txerrs={port['txerrs']}, "
+            f"rx_util={port["rx_utilization"]}, tx_util={port["tx_utilization"]}, throughput (mbps)={port["throughput (mbps)"]}, "
+            f"buffer_occ={port["buffer_occ"]}"
         )
     
     footer = "PACKET ENDED"
@@ -62,14 +60,19 @@ class EnhancedSwitch:
                 continue
             port_stats.append({
                 "port_id": port,
-                "rxpkts": int(data.get('rx_packet_rate', 0)),
-                "rxbytes": int(data.get('rx_byte_rate', 0)),
-                "rxerrs": int(data.get('rx_error_rate', 0)),
-                "txpkts": int(data.get('tx_packet_rate', 0)),
-                "txbytes": int(data.get('tx_byte_rate', 0)),
-                "txerrs": int(data.get('tx_error_rate', 0))
+                "rxpkts": health_data[port]['rx_packet_rate'],
+                "rxbytes": health_data[port]['rx_byte_rate'],
+                "rxerrs": health_data[port]['rx_error_rate'],
+                "txpkts": health_data[port]['tx_packet_rate'],
+                "txbytes": health_data[port]['tx_byte_rate'],
+                "txerrs": health_data[port]['tx_error_rate'],
+                "rx_utilization": health_data[port]["rx_utilization"],
+                "tx_utilization": health_data[port]["tx_utilization"],
+                "throughput (mbps)": health_data[port]["throughput (mbps)"],
+                "buffer_occ": health_data[port]["buffer_occupancy"]  
             })
         return port_stats
+
 
     def send_health_parameters(self, cc):
         """
@@ -78,18 +81,15 @@ class EnhancedSwitch:
         """
         now = datetime.datetime.utcnow()
         port_stats = self.get_port_stats()
-        # Build the readable payload
+        # Build the payload
         payload_str = build_payload(is_switch=True, mac=self.host.MAC(), port_stats=port_stats, timestamp=now)
         # Encode as ASCII bytes
         payload_bytes = payload_str.encode('ascii')
         
-        # Prepare parameters for scapy command
         iface = self.host.intfNames()[0]
         src_mac = self.host.MAC()
         dst_mac = cc.MAC()
         
-        # Build and send the packet using scapy directly via a python one-liner
-        # Here, we are using a command-line execution of a python snippet.
         cmd = (
             'python3 -c "'
             "from scapy.all import Ether, UDP, Raw, sendp; "
@@ -111,10 +111,10 @@ class CustomTopo(Topo):
         h1 = self.addHost('h1')
         cc = self.addHost('cc')
         h2 = self.addHost('h2')
-        self.addLink(s1h, s1)
-        self.addLink(h1, s1)
-        self.addLink(cc, s1)
-        self.addLink(h2, s1)
+        self.addLink(s1h, s1,max_queue_size = 200)
+        self.addLink(h1, s1,max_queue_size = 200)
+        self.addLink(cc, s1,max_queue_size = 200)
+        self.addLink(h2, s1,max_queue_size = 200)
 
 def simpleTest():
     # Create the topology and network
@@ -134,27 +134,24 @@ def simpleTest():
     # Generate some traffic between h1 and h2 (to produce non-zero counters)
     h2.cmd('iperf -s -u -i 1 > iperf_server_output &')
     time.sleep(1)
-    h1.cmd('iperf -c ' + h2.IP() + ' -u -t 30 -b 10m &')
+    h1.cmd('iperf -c ' + h2.IP() + ' -u -t 3000 -b 30m &')
     time.sleep(1)
-
-    # Create an EnhancedSwitch instance (telemetry host + monitoring switch)
-    enhanced_switch = EnhancedSwitch(s1h, s1, parameters={})
-
-
 
     # Capture all packets excluding ICMP, MDNS, and ARP
     cc.cmd('tcpdump -i any -v -w all_packets.pcap not icmp6 and not port 5353 and not arp &')
+
+    # Create an EnhancedSwitch instance (telemetry host + monitoring switch)
+    enhanced_switch = EnhancedSwitch(s1h, s1, parameters={})
     
     # Send telemetry packets multiple times
     for _ in range(5):
         enhanced_switch.send_health_parameters(cc)
         time.sleep(5)
-    cc.cmd('killall tcpdump')
-    end2end_cc2dc('all_packets.pcap', 'cc1')
+    cc.cmd("killall tcpdump")
+    end2end_cc2dc("all_packets.pcap","cc1")
+    h2.cmd("killall iperf")
 
-    
 
-    h2.cmd('killall iperf')
 
     net.stop()
 
