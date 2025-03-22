@@ -1,8 +1,8 @@
-#!/usr/bin/env python3
 from mininet.node import OVSKernelSwitch
 from mininet.log import info
 import time
 import re
+import statistics
 
 class HealthMonitoringSwitch(OVSKernelSwitch):
     """Custom switch that captures health parameters."""
@@ -77,23 +77,22 @@ class HealthMonitoringSwitch(OVSKernelSwitch):
                 'tx_errors': tx_errors,
             }
         return stats
+    
 
-    def get_health_parameters(self, duration=5, link_capacity_bps=10e6):
+
+    def get_health_parameters(self, duration=5, link_capacity_bps=10e6, ping_target=None, ping_count=5):
         """
-        Calculate per-port rates and error rates over the given duration.
-        Returns a dictionary keyed by port number.
+        Measures and returns health parameters for the switch ports.
         """
         if self.last_stats_time is None:
             info(f"Warning: {self.name} hasn't been started properly for health monitoring.\n")
             return {}
-        
         current_time = time.time()
         elapsed_time = current_time - self.last_stats_time
         if elapsed_time < duration:
             time.sleep(duration - elapsed_time)
             current_time = time.time()
             elapsed_time = current_time - self.last_stats_time
-
         current_stats = self._get_port_stats()
         health_data = {}
         for port, current in current_stats.items():
@@ -105,17 +104,45 @@ class HealthMonitoringSwitch(OVSKernelSwitch):
                 tx_byte_rate = (current['tx_bytes'] - initial['tx_bytes']) / elapsed_time
                 rx_error_rate = (current['rx_errors'] - initial['rx_errors']) / elapsed_time
                 tx_error_rate = (current['tx_errors'] - initial['tx_errors']) / elapsed_time
-
+                avg_thr_bps = ((rx_byte_rate + tx_byte_rate) * 8) / 2
+                avg_thr_mbps = avg_thr_bps / 1e6
+                rx_util = (rx_byte_rate * 8 / link_capacity_bps) * 100
+                tx_util = (tx_byte_rate * 8 / link_capacity_bps) * 100
+                # Use the provided measure_buffer_occupancy for this port
+                buffer_occ = measure_buffer_occupancy(self, port)
                 health_data[port] = {
                     'rx_packet_rate': rx_packet_rate,
                     'rx_byte_rate': rx_byte_rate,
                     'tx_packet_rate': tx_packet_rate,
                     'tx_byte_rate': tx_byte_rate,
+                    'throughput (mbps)': avg_thr_mbps,
+                    'rx_utilization': rx_util,
+                    'tx_utilization': tx_util,
                     'rx_error_rate': rx_error_rate,
                     'tx_error_rate': tx_error_rate,
+                    'buffer_occupancy': buffer_occ
                 }
             else:
                 health_data[port] = {"error": "Initial stats not available"}
         self.initial_stats = current_stats
         self.last_stats_time = current_time
+
         return health_data
+
+
+
+def measure_buffer_occupancy(switch, port):
+    """
+    Attempts to calculate buffer occupancy for a given switch port.
+    This function uses the 'tc -s qdisc' command on the interface corresponding to the port.
+    """
+    iface = f"{switch.name}-eth{port}"
+    output = switch.cmd(f"tc -s qdisc show dev {iface}")
+    # print(f"tc output for {iface}:\n{output}")
+    match = re.search(r'backlog\s+(\d+)b', output)
+    if match:
+        occupancy_bytes = int(match.group(1))
+        return occupancy_bytes
+    else:
+        return None
+    
