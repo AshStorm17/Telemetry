@@ -143,19 +143,21 @@ def simpleTest():
     # Create an EnhancedSwitch instance (telemetry host + monitoring switch)
     enhanced_switch = EnhancedSwitch(s1h, s1, parameters={})
     
-    # Send telemetry packets multiple times
-    for _ in range(5):
-        enhanced_switch.send_health_parameters(cc)
-        time.sleep(5)
-    cc.cmd("killall tcpdump")
-    end2end_cc2dc("all_packets.pcap","cc1")
-    h2.cmd("killall iperf")
+    try:
+        # Send telemetry packets continuously in an infinite loop
+        while True:
+            enhanced_switch.send_health_parameters(cc)
+            time.sleep(4)
+    except KeyboardInterrupt:
+        print("Infinite telemetry loop interrupted by user.")
+    finally:
+        # Cleanup: kill background processes and process the captured packets
+        cc.cmd("killall tcpdump")
+        h2.cmd("killall iperf")
+        end2end_cc2dc("all_packets.pcap", "cc1")
+        net.stop()
 
-
-
-    net.stop()
 
 if __name__ == '__main__':
     setLogLevel('info')
     simpleTest()
-
