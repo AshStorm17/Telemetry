@@ -22,15 +22,15 @@ def find_start_end_packets_scapy(pcap_file):
             if Raw in packet:
                 payload = packet[Raw].load.decode('utf-8', errors='ignore') # Decode, ignoring errors
                 # Create a file called Hello1.txt and write Hello1 to it
-                with open("Hello1.txt", "w") as f:
-                    f.write("Hello1")
-                    # Append time
-                    f.write(str(datetime.datetime.now()))
+                # with open("Hello1.txt", "w") as f:
+                #     f.write("Hello1")
+                #     # Append time
+                #     f.write(str(datetime.datetime.now()))
 
                 if "PACKET STARTED" in payload or "PACKET ENDED" in payload:
                     # Append time to the file
-                    with open("Hello1.txt", "a") as f:
-                        f.write(str(datetime.datetime.now()))
+                    # with open("Hello1.txt", "a") as f:
+                    #     f.write(str(datetime.datetime.now()))
                     # print(f"Packet Number: {packet_number + 1}") # Scapy packets are 0-indexed.
                     # Show only the load
                     # print(payload)
@@ -80,12 +80,16 @@ def find_start_end_packets_scapy(pcap_file):
                         # Split the port statistics line
                         port_stat_parts = port_stat.split(", ")
                         port_id = port_stat_parts[0].split(" ")[1]
-                        rxpkts = int(port_stat_parts[0].split("=")[1])
-                        rxbytes = int(port_stat_parts[1].split("=")[1])
-                        rxerrs = int(port_stat_parts[2].split("=")[1])
-                        txpkts = int(port_stat_parts[3].split("=")[1])
-                        txbytes = int(port_stat_parts[4].split("=")[1])
-                        txerrs = int(port_stat_parts[5].split("=")[1])
+                        rxpkts = float(port_stat_parts[0].split("=")[1])
+                        rxbytes = float(port_stat_parts[1].split("=")[1])
+                        rxerrs = float(port_stat_parts[2].split("=")[1])
+                        txpkts = float(port_stat_parts[3].split("=")[1])
+                        txbytes = float(port_stat_parts[4].split("=")[1])
+                        txerrs = float(port_stat_parts[5].split("=")[1])
+                        rxutil = float(port_stat_parts[6].split("=")[1])
+                        txutil = float(port_stat_parts[7].split("=")[1])
+                        throughput = float(port_stat_parts[8].split("=")[1])
+                        buffer_occ = float(port_stat_parts[9].split("=")[1])
                         # print(f"Port {port_id}: Rxpkts={rxpkts}, Rxbytes={rxbytes}, Rxerrs={rxerrs}, Txpkts={txpkts}, Txbytes={txbytes}, Txerrs={txerrs}")
                         port_wise_statistics[port_id] = {
                             'Rx Packets': rxpkts,
@@ -93,7 +97,11 @@ def find_start_end_packets_scapy(pcap_file):
                             'Rx Errors': rxerrs,
                             'Tx Packets': txpkts,
                             'Tx Bytes': txbytes,
-                            'Tx Errors': txerrs
+                            'Tx Errors': txerrs,
+                            'Rx Utilization': rxutil,
+                            'Tx Utilization': txutil,
+                            'Throughput (Mbps)': throughput,
+                            'Buffer Occupancy': buffer_occ
                         }
                         # print(f"Port {port_id}: {port_wise_statistics[port_id]}")
 
@@ -111,6 +119,10 @@ def find_start_end_packets_scapy(pcap_file):
                             'Total Tx Packets': 0,
                             'Total Tx Bytes': 0,
                             'Total Tx Errors': 0,
+                            'Total Rx Utilization': 0,
+                            'Total Tx Utilization': 0,
+                            'Total Throughput (Mbps)': 0,
+                            'Total Buffer Occupancy': 0,
                             'Min Rx Packets': float('inf'),
                             'Max Rx Packets': float('-inf'),
                             'Min Rx Bytes': float('inf'),
@@ -123,12 +135,24 @@ def find_start_end_packets_scapy(pcap_file):
                             'Max Tx Bytes': float('-inf'),
                             'Min Tx Errors': float('inf'),
                             'Max Tx Errors': float('-inf'),
+                            'Max Rx Utilization': float('-inf'),
+                            'Min Rx Utilization': float('inf'),
+                            'Max Tx Utilization': float('-inf'),
+                            'Min Tx Utilization': float('inf'),
+                            'Max Throughput (Mbps)': float('-inf'),
+                            'Min Throughput (Mbps)': float('inf'),
+                            'Max Buffer Occupancy': float('-inf'),
+                            'Min Buffer Occupancy': float('inf'),
                             'Average Rx Packets': 0,
                             'Average Rx Bytes': 0,
                             'Average Rx Errors': 0,
                             'Average Tx Packets': 0,
                             'Average Tx Bytes': 0,
-                            'Average Tx Errors': 0
+                            'Average Tx Errors': 0,
+                            'Average Rx Utilization': 0,
+                            'Average Tx Utilization': 0,
+                            'Average Throughput (Mbps)': 0,
+                            'Average Buffer Occupancy': 0
                         }
                     
                     # Update the timestamps
@@ -146,6 +170,10 @@ def find_start_end_packets_scapy(pcap_file):
                         switch_wise_statistics[mac]['Total Tx Packets'] += port_stat['Tx Packets']
                         switch_wise_statistics[mac]['Total Tx Bytes'] += port_stat['Tx Bytes']
                         switch_wise_statistics[mac]['Total Tx Errors'] += port_stat['Tx Errors']
+                        switch_wise_statistics[mac]['Total Rx Utilization'] += port_stat['Rx Utilization']
+                        switch_wise_statistics[mac]['Total Tx Utilization'] += port_stat['Tx Utilization']
+                        switch_wise_statistics[mac]['Total Throughput (Mbps)'] += port_stat['Throughput (Mbps)']
+                        switch_wise_statistics[mac]['Total Buffer Occupancy'] += port_stat['Buffer Occupancy']
 
                         switch_wise_statistics[mac]['Min Rx Packets'] = min(switch_wise_statistics[mac]['Min Rx Packets'], port_stat['Rx Packets'])
                         switch_wise_statistics[mac]['Max Rx Packets'] = max(switch_wise_statistics[mac]['Max Rx Packets'], port_stat['Rx Packets'])
@@ -159,6 +187,14 @@ def find_start_end_packets_scapy(pcap_file):
                         switch_wise_statistics[mac]['Max Tx Bytes'] = max(switch_wise_statistics[mac]['Max Tx Bytes'], port_stat['Tx Bytes'])
                         switch_wise_statistics[mac]['Min Tx Errors'] = min(switch_wise_statistics[mac]['Min Tx Errors'], port_stat['Tx Errors'])
                         switch_wise_statistics[mac]['Max Tx Errors'] = max(switch_wise_statistics[mac]['Max Tx Errors'], port_stat['Tx Errors'])
+                        switch_wise_statistics[mac]['Min Rx Utilization'] = min(switch_wise_statistics[mac]['Min Rx Utilization'], port_stat['Rx Utilization'])
+                        switch_wise_statistics[mac]['Max Rx Utilization'] = max(switch_wise_statistics[mac]['Max Rx Utilization'], port_stat['Rx Utilization'])
+                        switch_wise_statistics[mac]['Min Tx Utilization'] = min(switch_wise_statistics[mac]['Min Tx Utilization'], port_stat['Tx Utilization'])
+                        switch_wise_statistics[mac]['Max Tx Utilization'] = max(switch_wise_statistics[mac]['Max Tx Utilization'], port_stat['Tx Utilization'])
+                        switch_wise_statistics[mac]['Min Throughput (Mbps)'] = min(switch_wise_statistics[mac]['Min Throughput (Mbps)'], port_stat['Throughput (Mbps)'])
+                        switch_wise_statistics[mac]['Max Throughput (Mbps)'] = max(switch_wise_statistics[mac]['Max Throughput (Mbps)'], port_stat['Throughput (Mbps)'])
+                        switch_wise_statistics[mac]['Min Buffer Occupancy'] = min(switch_wise_statistics[mac]['Min Buffer Occupancy'], port_stat['Buffer Occupancy'])
+                        switch_wise_statistics[mac]['Max Buffer Occupancy'] = max(switch_wise_statistics[mac]['Max Buffer Occupancy'], port_stat['Buffer Occupancy'])
 
                     switch_wise_statistics[mac]['Average Rx Packets'] = switch_wise_statistics[mac]['Total Rx Packets'] / num_ports
                     switch_wise_statistics[mac]['Average Rx Bytes'] = switch_wise_statistics[mac]['Total Rx Bytes'] / num_ports
@@ -166,6 +202,10 @@ def find_start_end_packets_scapy(pcap_file):
                     switch_wise_statistics[mac]['Average Tx Packets'] = switch_wise_statistics[mac]['Total Tx Packets'] / num_ports
                     switch_wise_statistics[mac]['Average Tx Bytes'] = switch_wise_statistics[mac]['Total Tx Bytes'] / num_ports
                     switch_wise_statistics[mac]['Average Tx Errors'] = switch_wise_statistics[mac]['Total Tx Errors'] / num_ports
+                    switch_wise_statistics[mac]['Average Rx Utilization'] = switch_wise_statistics[mac]['Total Rx Utilization'] / num_ports
+                    switch_wise_statistics[mac]['Average Tx Utilization'] = switch_wise_statistics[mac]['Total Tx Utilization'] / num_ports
+                    switch_wise_statistics[mac]['Average Throughput (Mbps)'] = switch_wise_statistics[mac]['Total Throughput (Mbps)'] / num_ports
+                    switch_wise_statistics[mac]['Average Buffer Occupancy'] = switch_wise_statistics[mac]['Total Buffer Occupancy'] / num_ports
 
                     # print("-" * 20)
 
@@ -204,6 +244,10 @@ def craft_to_cc2dc_protocol_payload(swstats, CC_Name):
     #     'Total Tx Packets': 42
     #     'Total Tx Bytes': 5831
     #     'Total Tx Errors': 0
+    #     'Total Rx Utilization': 0
+    #     'Total Tx Utilization': 0
+    #     'Total Throughput (Mbps)': 0
+    #     'Total Buffer Occupancy': 0
     #     'Min Rx Packets': 0
     #     'Max Rx Packets': 1
     #     'Min Rx Bytes': 0
@@ -216,12 +260,24 @@ def craft_to_cc2dc_protocol_payload(swstats, CC_Name):
     #     'Max Tx Bytes': 718
     #     'Min Tx Errors': 0
     #     'Max Tx Errors': 0
+    #     'Min Rx Utilization': 0
+    #     'Max Rx Utilization': 0
+    #     'Min Tx Utilization': 0
+    #     'Max Tx Utilization': 0
+    #     'Min Throughput (Mbps)': 0
+    #     'Max Throughput (Mbps)': 0
+    #     'Min Buffer Occupancy': 0
+    #     'Max Buffer Occupancy': 0
     #     'Average Rx Packets': 0.75
     #     'Average Rx Bytes': 300.0
     #     'Average Rx Errors': 0.0
     #     'Average Tx Packets': 10.5
     #     'Average Tx Bytes': 1457.75
     #     'Average Tx Errors': 0.0
+    #     'Average Rx Utilization': 0.0
+    #     'Average Tx Utilization': 0.0
+    #     'Average Throughput (Mbps)': 0.0
+    #     'Average Buffer Occupancy': 0.0
     # We will put this into the TCP Payload
 
     # Create the CC2DC packet payload
@@ -244,6 +300,10 @@ def craft_to_cc2dc_protocol_payload(swstats, CC_Name):
         tcppayload += f"{stats['Total Tx Packets']}\n"
         tcppayload += f"{stats['Total Tx Bytes']}\n"
         tcppayload += f"{stats['Total Tx Errors']}\n"
+        tcppayload += f"{stats['Total Rx Utilization']}\n"
+        tcppayload += f"{stats['Total Tx Utilization']}\n"
+        tcppayload += f"{stats['Total Throughput (Mbps)']}\n"
+        tcppayload += f"{stats['Total Buffer Occupancy']}\n"
         tcppayload += f"{stats['Min Rx Packets']}\n"
         tcppayload += f"{stats['Max Rx Packets']}\n"
         tcppayload += f"{stats['Min Rx Bytes']}\n"
@@ -256,12 +316,24 @@ def craft_to_cc2dc_protocol_payload(swstats, CC_Name):
         tcppayload += f"{stats['Max Tx Bytes']}\n"
         tcppayload += f"{stats['Min Tx Errors']}\n"
         tcppayload += f"{stats['Max Tx Errors']}\n"
+        tcppayload += f"{stats['Min Rx Utilization']}\n"
+        tcppayload += f"{stats['Max Rx Utilization']}\n"
+        tcppayload += f"{stats['Min Tx Utilization']}\n"
+        tcppayload += f"{stats['Max Tx Utilization']}\n"
+        tcppayload += f"{stats['Min Throughput (Mbps)']}\n"
+        tcppayload += f"{stats['Max Throughput (Mbps)']}\n"
+        tcppayload += f"{stats['Min Buffer Occupancy']}\n"
+        tcppayload += f"{stats['Max Buffer Occupancy']}\n"
         tcppayload += f"{stats['Average Rx Packets']}\n"
         tcppayload += f"{stats['Average Rx Bytes']}\n"
         tcppayload += f"{stats['Average Rx Errors']}\n"
         tcppayload += f"{stats['Average Tx Packets']}\n"
         tcppayload += f"{stats['Average Tx Bytes']}\n"
         tcppayload += f"{stats['Average Tx Errors']}\n"
+        tcppayload += f"{stats['Average Rx Utilization']}\n"
+        tcppayload += f"{stats['Average Tx Utilization']}\n"
+        tcppayload += f"{stats['Average Throughput (Mbps)']}\n"
+        tcppayload += f"{stats['Average Buffer Occupancy']}\n"
     tcppayload += "CC2DC PACKET ENDED"
 
 

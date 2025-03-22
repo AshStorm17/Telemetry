@@ -5,6 +5,7 @@ from mininet.log import setLogLevel, info
 from mininet.cli import CLI
 import time
 import threading
+import os
 
 class MyTopo(Topo):
     "Simple topology example."
@@ -25,8 +26,10 @@ def run_commands(h1, h2):
     def h1_send_udp():
         """Sends UDP packets from h1."""
         for _ in range(5):
-            h1.cmd('echo "Hello from h1!" > Hello.txt') # create a file on the host
-            h1.cmd('cat Hello.txt | nc -u -w 1 {} 12345'.format(h2.IP())) # send data as UDP
+            if not os.path.exists("cc1_payload.txt"):
+                with open("cc1_payload.txt", "w") as f:
+                    f.write("DUMMY_PAYLOAD")
+            h1.cmd('cat cc1_payload.txt | nc -u -w 1 {} 12345'.format(h2.IP())) # send data as UDP
             print(f"h1: Sent UDP packet at {time.time()}")
             time.sleep(5)
 
