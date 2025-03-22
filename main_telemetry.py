@@ -5,6 +5,9 @@ from mininet.link import TCLink
 from mininet.log import setLogLevel, info
 import time
 import datetime
+from scapy import *
+from scapy.all import *
+import socket
 
 # Import the HealthMonitoringSwitch from our separate module
 from health_switch import HealthMonitoringSwitch
@@ -130,7 +133,7 @@ class EnhancedSwitch:
         Build the custom payload (with ASCII markers) and send it
         as a UDP packet using Scapy, encapsulated in an Ethernet frame.
         """
-        now = datetime.datetime.utcnow()
+        now = datetime.utcnow()
         port_stats = self.get_port_stats()
         payload = build_payload(is_switch=True, mac=self.host.MAC(), port_stats=port_stats, timestamp=now)
         payload_hex = payload.hex()
@@ -177,8 +180,8 @@ def simpleTest():
     cc = net.get('cc')
     h2 = net.get('h2')
 
-    # Start tcpdump on the cluster center to capture telemetry packets
-    cc.cmd('tcpdump -i any -w received_packets.pcap &')
+    # Capture all packets excluding ICMP, MDNS, and ARP
+    cc.cmd('tcpdump -i any -v -w all_packets.pcap not icmp6 and not port 5353 and not arp &')
 
     # Create an EnhancedSwitch instance (telemetry host + monitoring switch)
     enhanced_switch = EnhancedSwitch(s1h, s1, parameters={})
@@ -187,6 +190,8 @@ def simpleTest():
     for _ in range(5):
         enhanced_switch.send_health_parameters(cc)
         time.sleep(5)
+        cc.cmd('python filter_packets.py')
+
 
     # Generate some traffic between h1 and h2 (to produce non-zero counters)
     h2.cmd('iperf -s -u -i 1 > iperf_server_output &')
