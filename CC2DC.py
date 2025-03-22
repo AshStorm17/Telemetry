@@ -25,13 +25,13 @@ def run_commands(h1, h2):
 
     def h1_send_udp():
         """Sends UDP packets from h1."""
-        for _ in range(5):
+        while True:
             if not os.path.exists("cc1_payload.txt"):
                 with open("cc1_payload.txt", "w") as f:
                     f.write("DUMMY_PAYLOAD")
             h1.cmd('cat cc1_payload.txt | nc -u -w 1 {} 12345'.format(h2.IP())) # send data as UDP
             print(f"h1: Sent UDP packet at {time.time()}")
-            time.sleep(5)
+            time.sleep(11)
 
     def h2_run_tcpdump():
         """Runs tcpdump on h2."""
