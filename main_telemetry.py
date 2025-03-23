@@ -10,7 +10,7 @@ import socket
 
 # Import the HealthMonitoringSwitch from our separate module
 from health_switch import HealthMonitoringSwitch
-from packet_processor import end2end_cc2dc
+
 
 # --- Payload Building Function (Readable Version) ---
 def build_payload(is_switch, mac, port_stats, timestamp):
@@ -154,7 +154,6 @@ def simpleTest():
         # Cleanup: kill background processes and process the captured packets
         cc.cmd("killall tcpdump")
         h2.cmd("killall iperf")
-        end2end_cc2dc("all_packets.pcap", "cc1")
         net.stop()
 
 
