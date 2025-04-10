@@ -23,7 +23,7 @@ TELEMETRY_PID=$!
 sleep 15
 
 echo "Starting packet sending..."
-sudo python3 cc2dc.py &
+sudo python3 CC2DC.py &
 SEND_PID=$!
 
 wait "$TELEMETRY_PID" "$SEND_PID"

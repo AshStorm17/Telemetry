@@ -33,7 +33,7 @@ def run_commands(h1, h2):
 
     def h2_run_tcpdump():
         """Runs tcpdump on h2."""
-        h2.cmd('tcpdump -i h2-eth0 udp port 12345 -w capture.pcap &')
+        h2.cmd('tcpdump -i h2-eth0 udp port 12345 -w dc_capture.pcap &')
         time.sleep(25)
         h2.cmd('kill %tcpdump')
         print("h2: tcpdump capture finished.")

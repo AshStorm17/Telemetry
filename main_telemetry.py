@@ -25,10 +25,10 @@ def build_payload(is_switch, mac, port_stats, timestamp):
     port_lines = []
     for port in port_stats:
         port_lines.append(
-            f"Port {port['port_id']}: Rxpkts={port['rxpkts']}, Rxbytes={port['rxbytes']}, "
-            f"Rxerrs={port['rxerrs']}, Txpkts={port['txpkts']}, Txbytes={port['txbytes']}, Txerrs={port['txerrs']}, "
-            f"rx_util={port["rx_utilization"]}, tx_util={port["tx_utilization"]}, throughput (mbps)={port["throughput (mbps)"]}, "
-            f"buffer_occ={port["buffer_occ"]}"
+            f"""Port {port['port_id']}: Rxpkts={port['rxpkts']}, Rxbytes={port['rxbytes']}, 
+            Rxerrs={port['rxerrs']}, Txpkts={port['txpkts']}, Txbytes={port['txbytes']}, Txerrs={port['txerrs']}, 
+            rx_util={port["rx_utilization"]}, tx_util={port["tx_utilization"]}, throughput (mbps)={port["throughput (mbps)"]}, 
+            buffer_occ={port["buffer_occ"]}"""
         )
     
     footer = "PACKET ENDED"
@@ -119,7 +119,7 @@ class CustomTopo(Topo):
 def simpleTest():
     # Create the topology and network
     topo = CustomTopo(n=3)
-    net = Mininet(topo=topo, host=Host, link=TCLink)
+    net = Mininet(topo=topo, host=Host, link=TCLink, controller=None)
     net.start()
     
     # Retrieve nodes
