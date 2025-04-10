@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Telemetry Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <h1>Network Health Dashboard</h1>
+    {% for graph in graphs %}
+        <h2>{{ graph.filename }}</h2>
+        <!-- <canvas id="chart{{ loop.index }}" width="800" height="400"></canvas>
+        <script>
+            const ctx{{ loop.index }} = document.getElementById('chart{{ loop.index }}').getContext('2d');
+            new Chart(ctx{{ loop.index }}, {
+                type: 'line',
+                data: {
+                    labels: {{ graph.data.timestamps }},
+                    datasets: [{
+                        label: 'Health Score',
+                        data: {{ graph.data.scores }},
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        fill: false
+                    }]
+                },
+                options: {
+                    scales: {
+                        x: { title: { display: true, text: 'Time' } },
+                        y: { title: { display: true, text: 'Health Score' } }
+                    }
+                }
+            });
+        </script> -->
+    {% endfor %}
+</body>
+</html>
