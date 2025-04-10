@@ -14,7 +14,7 @@ A Flask-based visualization and inference platform for monitoring network health
 ## 🔧 Project Structure
 ```
 Telemetry/
-├── [app.py]               # Main Flask application entry point
+├── app.py               # Main Flask application entry point
 ├── static/                # Static files (CSS, JavaScript, images)
 │   ├── css/
 │   ├── js/
@@ -28,7 +28,7 @@ Telemetry/
 │   └── processed/         # Processed data for visualization
 ├── tests/                 # Unit and integration tests
 │   └── test_app.py        # Tests for the Flask app
-├── [requirements.txt](http://_vscodecontentref_/2)       # Python dependencies
-├── [README.md](http://_vscodecontentref_/3)              # Project documentation
+├── requirements.txt     # Python dependencies
+├── README.md           # Project documentation
 └── LICENSE                # License file
 ```
