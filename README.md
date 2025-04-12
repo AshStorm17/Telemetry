@@ -142,7 +142,7 @@ network_telemetry_dashboard/
 
 ## 🔍 Customizing for Real Network Devices
 
-The current implementation uses simulated data. To collect actual metrics from network devices:
+The current implementation uses simulated data, as of now but will surely be updated with the real data soon. To add/collect specific metrics from network devices:
 
 1. Modify the `TelemetryCollector` class in `utils/telemetry.py` to connect to your devices using SNMP, API calls, or other protocols.
 2. Adjust the parameters in `config.py` to match your specific monitoring needs.
