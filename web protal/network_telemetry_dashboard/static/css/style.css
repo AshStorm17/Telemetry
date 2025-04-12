@@ -1,0 +1,110 @@
+/* Global styles */
+body {
+    background-color: #f8f9fa;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+footer {
+    margin-top: auto;
+}
+
+/* Dashboard styles */
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border-radius: 0.5rem;
+    border: none;
+}
+
+.card-header {
+    background-color: rgba(0, 0, 0, 0.03);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+    padding: 0.75rem 1.25rem;
+}
+
+.metric-card {
+    border-radius: 0.5rem;
+    overflow: hidden;
+    border: none;
+    height: 100%;
+}
+
+.metric-card .card-body {
+    padding: 1.25rem;
+}
+
+.metric-card h3 {
+    font-size: 2rem;
+    font-weight: 600;
+}
+
+/* Responsiveness */
+@media (max-width: 992px) {
+    .metric-card h5 {
+        font-size: 0.9rem;
+    }
+    
+    .metric-card h3 {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .metric-card {
+        margin-bottom: 1rem;
+    }
+}
+
+/* Status indicators */
+.status-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 5px;
+}
+
+.status-good {
+    background-color: #28a745;
+}
+
+.status-warning {
+    background-color: #ffc107;
+}
+
+.status-critical {
+    background-color: #dc3545;
+}
+
+.status-inactive {
+    background-color: #6c757d;
+}
+
+/* Animations */
+.card-hover {
+    transition: transform 0.3s ease;
+}
+
+.card-hover:hover {
+    transform: translateY(-5px);
+}
+
+/* For chart loading states */
+.chart-loading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.7);
+    z-index: 100;
+}
+
+.chart-loading-spinner {
+    width: 3rem;
+    height: 3rem;
+}
