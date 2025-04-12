@@ -184,14 +184,6 @@ The dashboard currently supports these metrics:
 - **Memory Usage**: Device memory utilization percentage
 - **Error Rate**: Network errors per second
 
-## 🔄 Adapting for Your Project
-
-This dashboard was designed for CS331 Computer Networks project on Network Telemetry Frameworks. To adapt it for your specific requirements:
-
-1. **Modify data collection**: Update the telemetry collector to gather data relevant to your network infrastructure
-2. **Extend metrics**: Add additional metrics specific to your monitoring needs
-3. **Customize visualization**: Modify the charts and dashboard layout to highlight the most important data for your use case
-
 ## 📜 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
