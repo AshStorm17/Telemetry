@@ -207,13 +207,4 @@ def handle_update_request(data):
     socketio.emit("telemetry_update", latest_metrics, room=request.sid)
 
 
-#########################
-# Main
-#########################
-
-if __name__ == "__main__":
-    # Start the telemetry collector
-    telemetry_collector.start_collection()
-
-    # Start the Flask application with SocketIO
-    socketio.run(app, host="0.0.0.0", port=5001, debug=True)
+__all__ = ["app", "socketio", "telemetry_collector"]
