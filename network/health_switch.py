@@ -1,7 +1,7 @@
 from mininet.node import OVSKernelSwitch
 from mininet.log import info
 import time
-import re 
+import re
 import statistics
 
 class HealthMonitoringSwitch(OVSKernelSwitch):
@@ -77,12 +77,11 @@ class HealthMonitoringSwitch(OVSKernelSwitch):
                 'tx_errors': tx_errors,
             }
         return stats
-    
 
-
-    def get_health_parameters(self, duration=5, link_capacity_bps=10e6, ping_target=None, ping_count=5):
+    def get_health_parameters(self, duration=5, link_capacity_bps=10e6):
         """
-        Measures and returns health parameters for the switch ports.
+        Calculate per-port rates and error rates over the given duration.
+        Returns a dictionary keyed by port number.
         """
         if self.last_stats_time is None:
             info(f"Warning: {self.name} hasn't been started properly for health monitoring.\n")

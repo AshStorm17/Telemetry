@@ -49,34 +49,36 @@ def find_start_end_packets_scapy(pcap_file):
 
                     # Split the payload into lines
                     payload_lines = payload.split("\n")
-                    # #Print line numbers
-                    # for i, line in enumerate(payload_lines):
-                    #     print(f"{i+1}: {line}")
+                    #Print line numbers
+                    for i, line in enumerate(payload_lines):
+                        print(f"{i+1}: {line}")
 
                     # Extract the MAC address
                     mac_line = payload_lines[2]
                     mac = mac_line.split(": ")[1]
-                    # print(f"MAC: {mac}")
+                    print(f"MAC: {mac}")
 
                     # Extract the number of ports
                     num_ports_line = payload_lines[3]
                     num_ports = int(num_ports_line.split(": ")[1])
-                    # print(f"Number of Ports: {num_ports}")
+                    print(f"Number of Ports: {num_ports}")
 
                     # Extract the timestamp
                     timestamp_line = payload_lines[4]
                     timestamp = timestamp_line.split(": ")[1]
-                    # print(f"Timestamp: {timestamp}")
+                    print(f"Timestamp: {timestamp}")
 
                     # Extract the port statistics
                     port_stats = []
                     for i in range(5, 5 + num_ports):
                         port_line = payload_lines[i]
                         port_stats.append(port_line)
-                    # print("Port Statistics:")
+
+                    print("Port Statistics:")
+                    print(port_stats)
                     port_wise_statistics = {}
                     for port_stat in port_stats:
-                        # print(port_stat)
+                        print(port_stat)
                         # Split the port statistics line
                         port_stat_parts = port_stat.split(", ")
                         port_id = port_stat_parts[0].split(" ")[1]
@@ -90,7 +92,33 @@ def find_start_end_packets_scapy(pcap_file):
                         txutil = float(port_stat_parts[7].split("=")[1])
                         throughput = float(port_stat_parts[8].split("=")[1])
                         buffer_occ = float(port_stat_parts[9].split("=")[1])
+                        checksum = float(port_stat_parts[10].split("=")[1])
                         # print(f"Port {port_id}: Rxpkts={rxpkts}, Rxbytes={rxbytes}, Rxerrs={rxerrs}, Txpkts={txpkts}, Txbytes={txbytes}, Txerrs={txerrs}")
+                        # Verifying checksum
+                        # Calculate checksum
+                        # checksum = (
+                        #     port['rxpkts'] + port['rxbytes'] + port['rxerrs'] +
+                        #     port['txpkts'] + port['txbytes'] + port['txerrs'] +
+                        #     port['rx_utilization'] + port['tx_utilization'] +
+                        #     port['throughput (mbps)'] + port['buffer_occ']
+                        # )
+                        # Perform checksum operation
+                        # checksum = checksum % 65536  # Ensure checksum is within 16-bit range
+                        checksum_calc = (
+                            rxpkts + rxbytes + rxerrs +
+                            txpkts + txbytes + txerrs +
+                            rxutil + txutil +
+                            throughput + buffer_occ
+                        )
+                        # Perform checksum operation
+                        checksum_calc = checksum_calc % 65536
+                        if checksum != checksum_calc:
+                            print(f"\n\n\n\n---------------------------------------------------\n\nChecksum mismatch for port {port_id}: {checksum} != {checksum_calc}\n\n")
+                            continue
+                        else:
+                            print(f"Checksum match for port {port_id}: {checksum} == {checksum_calc}\n\n+++++++++++++++++++++\n\n\n\n")
+
+
                         port_wise_statistics[port_id] = {
                             'Rx Packets': rxpkts,
                             'Rx Bytes': rxbytes,
@@ -103,7 +131,7 @@ def find_start_end_packets_scapy(pcap_file):
                             'Throughput (Mbps)': throughput,
                             'Buffer Occupancy': buffer_occ
                         }
-                        # print(f"Port {port_id}: {port_wise_statistics[port_id]}")
+                        print(f"Port {port_id}: {port_wise_statistics[port_id]}")
 
                     if mac not in switch_wise_statistics:
                         switch_wise_statistics[mac] = {
@@ -282,7 +310,7 @@ def craft_to_cc2dc_protocol_payload(swstats, CC_Name):
 
     # Create the CC2DC packet payload
     timenow = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
-    tcppayload = "CC2DC PACKET STARTED"
+    tcppayload = "CC2DC PACKET STARTED\n"
     tcppayload += f"{CC_Name}\n"
     tcppayload += f"{len(swstats)}\n"
     tcppayload += f"{timenow}\n"
@@ -334,6 +362,9 @@ def craft_to_cc2dc_protocol_payload(swstats, CC_Name):
         tcppayload += f"{stats['Average Tx Utilization']}\n"
         tcppayload += f"{stats['Average Throughput (Mbps)']}\n"
         tcppayload += f"{stats['Average Buffer Occupancy']}\n"
+    # Add a checksum for the entire payload
+    checksum = sum([ord(c) for c in tcppayload]) % 65536
+    tcppayload += f"Checksum: {checksum}\n"
     tcppayload += "CC2DC PACKET ENDED"
 
 
@@ -387,5 +418,4 @@ if __name__ == "__main__":
         f.write(tcp_payload)
 
     print(f"Payload saved to {CC_Name.lower()}_payload.txt")
-
 
