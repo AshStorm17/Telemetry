@@ -22,6 +22,10 @@ class CustomTopo(Topo):
         h12 = self.addHost('h12')
         h13 = self.addHost('h13')
         h14 = self.addHost('h14')
+        h15 = self.addHost('h15')
+        h16 = self.addHost('h16')
+        h17 = self.addHost('h17')
+        h18 = self.addHost('h18')
         s12 = self.addSwitch('s12', cls=HealthMonitoringSwitch)
         s12h = self.addHost('s12h')
 
@@ -30,6 +34,7 @@ class CustomTopo(Topo):
         h21 = self.addHost('h21')
         cc2 = self.addHost('cc2')
         h22 = self.addHost('h22')
+
 
         dc = self.addHost('dc')
         dcs = self.addSwitch('dcs1')
@@ -46,6 +51,10 @@ class CustomTopo(Topo):
         self.addLink(h14, s12)
         self.addLink(s12, dcs)
         self.addLink(s12, s11)
+        self.addLink(h15, s12)
+        self.addLink(h16, s12)
+        self.addLink(h17, s11)
+        self.addLink(h18, s11)
 
         self.addLink(s21h, s21)
         self.addLink(h21, s21)
@@ -69,6 +78,10 @@ def simpleTest():
     h12 = net.get('h12')
     h13 = net.get('h13')
     h14 = net.get('h14')
+    h15 = net.get('h15')
+    h16 = net.get('h16')
+    h17 = net.get('h17')
+    h18 = net.get('h18')
     s12 = net.get('s12')
     s12h = net.get('s12h')
     s12.capture_initial_stats()
@@ -94,6 +107,10 @@ def simpleTest():
     print("s11h: ", s11h.IP())
     print("h13: ", h13.IP())
     print("h14: ", h14.IP())
+    print("h15: ", h15.IP())
+    print("h16: ", h16.IP())
+    print("h17: ", h17.IP())
+    print("h18: ", h18.IP())
     print("s12: ", s12.IP())
     print("s12h: ", s12h.IP())
 
@@ -109,16 +126,24 @@ def simpleTest():
 
     h12.cmd('iperf -s -u -i 1 > iperf_server_output &')
     time.sleep(1)
-    h11.cmd('iperf -c ' + h12.IP() + ' -u -b 1k &')
+    h11.cmd('iperf -c ' + h12.IP() + ' -u -b 0.1k &')
     time.sleep(1)
-    h13.cmd('iperf -c ' + h12.IP() + ' -u -b 1k &')
+    h13.cmd('iperf -c ' + h12.IP() + ' -u -b 0.1k &')
     time.sleep(1)
-    h14.cmd('iperf -c ' + h12.IP() + ' -u -b 1k &')
+    h14.cmd('iperf -c ' + h12.IP() + ' -u -b 0.1k &')
+    time.sleep(1)
+    h15.cmd('iperf -c ' + h12.IP() + ' -u -b 0.1k &')
+    time.sleep(1)
+    h16.cmd('iperf -c ' + h12.IP() + ' -u -b 0.1k &')
+    time.sleep(1)
+    h17.cmd('iperf -c ' + h12.IP() + ' -u -b 0.1k &')
+    time.sleep(1)
+    h18.cmd('iperf -c ' + h12.IP() + ' -u -b 0.1k &')
     time.sleep(1)
 
     h22.cmd('iperf -s -u -i 1 > iperf_server_output &')
     time.sleep(1)
-    h21.cmd('iperf -c ' + h22.IP() + ' -u -b 1k &')
+    h21.cmd('iperf -c ' + h22.IP() + ' -u -b 0.1k &')
     time.sleep(1)
 
     enhanced_switch11 = EnhancedSwitch(s11h, s11, parameters={})
@@ -137,7 +162,7 @@ def simpleTest():
         try:
             ticks += 1
             ticks %= 10
-            if ticks%4 == 0:
+            if ticks%2 == 0:
                 # End tcpdump of cc
                 cc1.cmd('kill %tcpdump')
                 cc2.cmd('kill %tcpdump')
