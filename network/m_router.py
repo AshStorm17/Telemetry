@@ -92,19 +92,18 @@ def simpleTest():
     print("r1: ", r1.IP())
         
     # Set up iperf server on h2 and h4 and start a UDP iperf client on h1 and h3
-    h4.cmd('iperf -s -u -i 1 > iperf_server_output &')
-    time.sleep(1)
-    h3.cmd('iperf -c ' + h4.IP() + ' -u -b 10m &')
-    time.sleep(1)
     h2.cmd('iperf -s -u -i 1 > iperf_server_output &')
     time.sleep(1)
-    h1.cmd('iperf -c ' + h2.IP() + ' -u -b 10m &')
+    h3.cmd('iperf -c ' + h2.IP() + ' -u -b 10m &')
+    time.sleep(1)
+    h4.cmd('iperf -s -u -i 1 > iperf_server_output &')
+    time.sleep(1)
+    h1.cmd('iperf -c ' + h4.IP() + ' -u -b 10m &')
     time.sleep(1)
     
     # Create telemetry objects for switch and router.
     enhanced_switch = EnhancedSwitch(s2h, s2, parameters={})
     enhanced_router = EnhancedRouter(r1, parameters={})
-    enhanced_router.start()
     
     # Start tcpdump on the data center and cluster center hosts.
     dc.cmd('tcpdump -i any udp port 12345 -w capture.pcap &')
