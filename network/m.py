@@ -11,7 +11,7 @@ from scapy.all import Ether, UDP, Raw, sendp
 import socket
 from health_switch import HealthMonitoringSwitch
 from packet_processor import end2end_cc2dc
-from hlp import *
+from hlp_switch import *
 
 class CustomTopo(Topo):
     def build(self, n=3):
