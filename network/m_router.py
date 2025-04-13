@@ -56,6 +56,8 @@ def simpleTest():
     net.start()
     
     # Retrieve nodes from the topology
+    r1 = net.get('r1')
+    r1.cmd('sysctl -w net.ipv4.ip_forward=1')
     s1 = net.get('s1')
     s2 = net.get('s2')
     s2.capture_initial_stats()
@@ -67,7 +69,6 @@ def simpleTest():
     cc1 = net.get('cc1')
     cc2 = net.get('cc2')
     dc = net.get('dc')
-    r1 = net.get('r1')
     r1.capture_initial_stats()
 
     # Basic connectivity
