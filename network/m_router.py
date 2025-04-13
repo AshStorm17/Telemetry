@@ -22,31 +22,35 @@ class CustomTopo(Topo):
         h2 = self.addHost('h2')
         h3 = self.addHost('h3')
         h4 = self.addHost('h4')
-        s1 = self.addSwitch('s1')
+
+        s1 = self.addSwitch('s1', cls=HealthMonitoringSwitch)
+        s1h = self.addHost('s1h')
         s2 = self.addSwitch('s2', cls=HealthMonitoringSwitch)
-        r1 = self.addHost('r1', cls=HealthMonitoringRouter)
         s2h = self.addHost('s2h')
+
+        r1 = self.addHost('r1', cls=HealthMonitoringRouter)
         cc1 = self.addHost('cc1')
-        ccs1 = self.addSwitch('ccs1')
         cc2 = self.addHost('cc2')
-        dcs1 = self.addSwitch('dcs1')
-        dcs2 = self.addSwitch('dcs2')
+        dcs = self.addSwitch('dcs1')
         dc = self.addHost('dc')
 
         self.addLink(h1, s1)
-        self.addLink(h2, s2)
+        self.addLink(h2, s1)
         self.addLink(h3, s2)
         self.addLink(h4, s2)
+        self.addLink(s1h, s1)
         self.addLink(s2h, s2)
         self.addLink(s1, r1)
         self.addLink(s2, r1)
-        self.addLink(ccs1, r1)
-        self.addLink(ccs1, cc1)
+        self.addLink(r1, dcs)
+        self.addLink(s1, dcs)
+        self.addLink(s2, dcs)
+        self.addLink(cc1, s1)
         self.addLink(cc2, s2)
-        self.addLink(cc1, dcs1)
-        self.addLink(cc2, dcs2)
-        self.addLink(dc, dcs1)
-        self.addLink(dc, dcs2)
+        self.addLink(r1, cc1)
+        self.addLink(dc, dcs)   
+        self.addLink(cc1, dcs)
+        self.addLink(cc2, dcs)
 
 
 def simpleTest():
@@ -56,8 +60,6 @@ def simpleTest():
     net.start()
     
     # Retrieve nodes from the topology
-    r1 = net.get('r1')
-    r1.cmd('sysctl -w net.ipv4.ip_forward=1')
     s1 = net.get('s1')
     s2 = net.get('s2')
     s2.capture_initial_stats()
@@ -69,7 +71,10 @@ def simpleTest():
     cc1 = net.get('cc1')
     cc2 = net.get('cc2')
     dc = net.get('dc')
+    r1 = net.get('r1')
+    r1.cmd('sysctl -w net.ipv4.ip_forward=1')
     r1.capture_initial_stats()
+
 
     # Basic connectivity
     net.pingAll()
@@ -99,6 +104,7 @@ def simpleTest():
     # Create telemetry objects for switch and router.
     enhanced_switch = EnhancedSwitch(s2h, s2, parameters={})
     enhanced_router = EnhancedRouter(r1, parameters={})
+    enhanced_router.start()
     
     # Start tcpdump on the data center and cluster center hosts.
     dc.cmd('tcpdump -i any udp port 12345 -w capture.pcap &')
