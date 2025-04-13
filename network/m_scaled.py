@@ -12,6 +12,7 @@ import socket
 from health_switch import HealthMonitoringSwitch
 from packet_processor import end2end_cc2dc
 from hlp_switch import *
+from hlp_router import *
 
 class CustomTopo(Topo):
     def build(self, n=3):
@@ -28,7 +29,7 @@ class CustomTopo(Topo):
         h18 = self.addHost('h18')
         s12 = self.addSwitch('s12', cls=HealthMonitoringSwitch)
         s12h = self.addHost('s12h')
-
+        
         s21 = self.addSwitch('s21', cls=HealthMonitoringSwitch)
         s21h = self.addHost('s21h')
         h21 = self.addHost('h21')

@@ -52,8 +52,7 @@ class EnhancedRouter:
     Custom class to handle telemetry for a router.
     Uses live health parameters from the associated HealthMonitoringRouter.
     """
-    def __init__(self, host, router, parameters):
-        self.host = host      # Telemetry host
+    def __init__(self, router, parameters):
         self.router = router  # HealthMonitoringRouter instance
         self.parameters = parameters
 
@@ -94,12 +93,12 @@ class EnhancedRouter:
         now = datetime.datetime.utcnow()
         interface_stats = self.get_interface_stats()
         # Build the payload; mark is_switch as False for a router.
-        payload_str = build_payload(is_switch=False, mac=self.host.MAC(), interface_stats=interface_stats, timestamp=now)
+        payload_str = build_payload(is_switch=False, mac=self.router.MAC(), interface_stats=interface_stats, timestamp=now)
         # Encode as ASCII bytes
         payload_bytes = payload_str.encode('ascii')
         
-        iface = self.host.intfNames()[0]
-        src_mac = self.host.MAC()
+        iface = self.router.intfNames()[0]
+        src_mac = self.router.MAC()
         dst_mac = cc.MAC()
         
         cmd = (
@@ -109,4 +108,4 @@ class EnhancedRouter:
             f"sendp(pkt, iface='{iface}')"
             '"'
         )
-        self.host.cmd(cmd)
+        self.router.cmd(cmd)
