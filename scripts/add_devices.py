@@ -1,5 +1,10 @@
+import os
+import sys
+
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from models import db
 from models.device import Device
+from app import app  # Import the existing app object
 
 def add_sample_devices():
     if Device.query.count() == 0:
@@ -20,4 +25,5 @@ def add_sample_devices():
         db.session.commit()
 
 if __name__ == '__main__':
-    add_sample_devices()
+    with app.app_context():  # Use the app's application context
+        add_sample_devices()
