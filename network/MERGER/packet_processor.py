@@ -113,10 +113,10 @@ def find_start_end_packets_scapy(pcap_file):
                         # Perform checksum operation
                         checksum_calc = checksum_calc % 65536
                         if checksum != checksum_calc:
-                            print(f"\n\nChecksum mismatch for port {port_id}: {checksum} != {checksum_calc}\n\n")
+                            print(f"\n\n\n\n---------------------------------------------------\n\nChecksum mismatch for port {port_id}: {checksum} != {checksum_calc}\n\n")
                             continue
-                        # else:
-                            # print(f"Checksum match for port {port_id}: {checksum} == {checksum_calc}\n\n+++++++++++++++++++++\n\n\n\n")
+                        else:
+                            print(f"Checksum match for port {port_id}: {checksum} == {checksum_calc}\n\n+++++++++++++++++++++\n\n\n\n")
 
 
                         port_wise_statistics[port_id] = {
@@ -310,7 +310,7 @@ def craft_to_cc2dc_protocol_payload(swstats, CC_Name):
 
     # Create the CC2DC packet payload
     timenow = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
-    tcppayload = "CC2DC PACKET STARTED"
+    tcppayload = "CC2DC PACKET STARTED\n"
     tcppayload += f"{CC_Name}\n"
     tcppayload += f"{len(swstats)}\n"
     tcppayload += f"{timenow}\n"
