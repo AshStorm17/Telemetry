@@ -1,8 +1,27 @@
 # wsgi.py
 from app import app, socketio, telemetry_collector
+import time
+import threading
+from utils.plot_graphs import generate_all_graphs
+import os
+
+# Define a background thread for live graph generation
+def live_graph_updater(interval=5):  # update every 5 seconds
+    csv_path = os.path.join(os.path.dirname(__file__), "network/dc_data.csv")
+    while True:
+        try:
+            graph_paths = generate_all_graphs(csv_path)
+            socketio.emit("graphs_updated", graph_paths)
+        except Exception as e:
+            print(f"[Live Graph] Error generating graphs: {e}")
+        time.sleep(interval)
 
 # Start telemetry collection
 telemetry_collector.start_collection()
+
+# Start live graph generation thread
+graph_thread = threading.Thread(target=live_graph_updater, daemon=True)
+graph_thread.start()
 
 # Run with SocketIO
 if __name__ == "__main__":

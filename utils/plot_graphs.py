@@ -1,6 +1,6 @@
 import plotly.graph_objects as go
 import os
-from packet_parser import parse_csv
+from utils.packet_parser import parse_csv
 
 def generate_graph(data, filename_prefix, parameter_name):
     x_vals = []
@@ -41,6 +41,27 @@ def generate_graph(data, filename_prefix, parameter_name):
         'png': png_path
     }
 
+def generate_all_graphs(csv_path, filename_prefix="network_stats"):
+    try:
+        packets = parse_csv(csv_path)
+        parameters = [
+            'Total Packets',
+            'Total Bytes',
+            'Average Rx Utilization',
+            'Average Tx Utilization',
+            'Total Errors',
+            'Average Throughput (Mbps)',
+            'Max Tx Bytes'
+        ]
+
+        results = {}
+        for param in parameters:
+            results[param] = generate_graph(packets, filename_prefix, param)
+        return results
+    except Exception as e:
+        print(f"Error generating graphs: {e}")
+        return {}
+    
 if __name__ == "__main__":
     # Run this when graph_utils.py is executed directly
     filename = '../network/dc_data.csv'
