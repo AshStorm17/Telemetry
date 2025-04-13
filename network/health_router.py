@@ -74,8 +74,25 @@ class HealthMonitoringRouter(Node):
     """Custom router that captures interface and system health parameters."""
     def __init__(self, name, **params):
         super().__init__(name, **params)
-        self.last_stats_time = time.time()
+        self.last_stats_time = None
         self.initial_stats = {}
+
+    def start(self):
+        """
+        Initialize the router, record the current time, and capture initial stats.
+        """
+        # Perform any necessary initialization for the router
+        self.last_stats_time = time.time()  # Record the start time
+        self.capture_initial_stats()  # Capture initial interface statistics
+        info(f"{self.name} initialized and ready for health monitoring.\n")
+    
+    def start_health_monitoring(self):
+        """
+        Start health monitoring by capturing initial stats.
+        """
+        self.capture_initial_stats()
+        info(f"Health monitoring started for {self.name}.\n")
+        self.last_stats_time = time.time()  # Reset last stats time
 
     def capture_initial_stats(self):
         """

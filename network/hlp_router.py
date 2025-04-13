@@ -56,6 +56,15 @@ class EnhancedRouter:
         self.router = router  # HealthMonitoringRouter instance
         self.parameters = parameters
 
+    def start(self):
+        """
+        Start the router and its health monitoring.
+        """
+        # Start the router
+        self.router.start()
+        # Start health monitoring
+        self.router.start_health_monitoring()
+
     def get_interface_stats(self):
         """
         Retrieve real-time interface statistics by calling the router's get_health_parameters().
