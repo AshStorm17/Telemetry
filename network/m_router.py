@@ -104,6 +104,7 @@ def simpleTest():
     # Create telemetry objects for switch and router.
     enhanced_switch = EnhancedSwitch(s2h, s2, parameters={})
     enhanced_router = EnhancedRouter(r1, parameters={})
+    enhanced_router.start()
     
     # Start tcpdump on the data center and cluster center hosts.
     dc.cmd('tcpdump -i any udp port 12345 -w capture.pcap &')
