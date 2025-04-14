@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}Network Telemetry Framework{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <div class="hero-content">
+        <h1 class="title">Network Telemetry Framework</h1>
+        <p class="subtitle">Real-time network monitoring and analysis</p>
+        <div class="sos-button-container">
+            <a href="{{ url_for('sos') }}" class="sos-button pulse-animation">
+                <i class="fas fa-exclamation-triangle"></i> SOS Information
+            </a>
+        </div>
+    </div>
+    <div class="hero-particles"></div>
+</section>
+
+<section class="team-video">
+    <h2 class="section-title">Our Team</h2>
+    <div class="video-container">
+        <video controls autoplay muted loop>
+            <source src="{{ url_for('static', filename='team_video.mp4') }}" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+    </div>
+</section>
+
+<section class="cluster-sections">
+    <h2 class="section-title">Cluster Centers</h2>
+    <div class="clusters">
+        <a href="{{ url_for('cluster', cluster_id=1) }}" class="cluster-card" data-cluster="1">
+            <div class="cluster-icon">
+                <i class="fas fa-university"></i>
+            </div>
+            <h3>Cluster Center 1</h3>
+            <p>Academic Area</p>
+            <span class="view-details">View Details <i class="fas fa-arrow-right"></i></span>
+        </a>
+        <a href="{{ url_for('cluster', cluster_id=2) }}" class="cluster-card" data-cluster="2">
+            <div class="cluster-icon">
+                <i class="fas fa-building"></i>
+            </div>
+            <h3>Cluster Center 2</h3>
+            <p>Hostel Area</p>
+            <span class="view-details">View Details <i class="fas fa-arrow-right"></i></span>
+        </a>
+        <a href="{{ url_for('cluster', cluster_id=3) }}" class="cluster-card" data-cluster="3">
+            <div class="cluster-icon">
+                <i class="fas fa-home"></i>
+            </div>
+            <h3>Cluster Center 3</h3>
+            <p>Housing Area</p>
+            <span class="view-details">View Details <i class="fas fa-arrow-right"></i></span>
+        </a>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/index.js') }}"></script>
+{% endblock %}
