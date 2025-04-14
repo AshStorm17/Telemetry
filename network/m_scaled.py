@@ -46,7 +46,7 @@ class CustomTopo(Topo):
         s22 = self.addSwitch('s22', cls=HealthMonitoringSwitch)
         s22h = self.addHost('s22h')
 
-        h31 = self.addSwitch('h31')
+        h31 = self.addHost('h31')
         h32 = self.addHost('h32')
         h33 = self.addHost('h33')
         h34 = self.addHost('h34')
@@ -360,20 +360,20 @@ def simpleTest():
                 # Begin the tcpdump of dc
                 dc.cmd('tcpdump -i any udp port 12345 -w capture.pcap &')
 
-            enhanced_switch11.send_health_parameters(cc1)
-            enhanced_switch12.send_health_parameters(cc1)
+            # enhanced_switch11.send_health_parameters(cc1)
+            # enhanced_switch12.send_health_parameters(cc1)
             enhanced_switch21.send_health_parameters(cc2)
             enhanced_switch22.send_health_parameters(cc2)
-            enhanced_switch31.send_health_parameters(cc3)
-            enhanced_switch32.send_health_parameters(cc3)
+            # enhanced_switch31.send_health_parameters(cc3)
+            # enhanced_switch32.send_health_parameters(cc3)
 
-            enhanced_router1.send_health_parameters(cc1)
+            # enhanced_router1.send_health_parameters(cc1)
             enhanced_router2.send_health_parameters(cc2)
-            enhanced_router3.send_health_parameters(cc3)
+            # enhanced_router3.send_health_parameters(cc3)
 
-            enhanced_router1.send_routing_parameters(cc1)
+            # enhanced_router1.send_routing_parameters(cc1)
             enhanced_router2.send_routing_parameters(cc2)
-            enhanced_router3.send_routing_parameters(cc3)
+            # enhanced_router3.send_routing_parameters(cc3)
 
 
         except KeyboardInterrupt:
