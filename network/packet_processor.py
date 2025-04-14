@@ -386,6 +386,91 @@ def end2end_cc2dc(pcap_file_path, CC_Name):
 
     print(f"Payload saved to {CC_Name.lower()}_payload.txt")
 
+def find_router_packets_scapy(pcap_file):
+    """
+    Reads a pcap file using Scapy and extracts router telemetry packets by looking for
+    "ROUTER PACKET STARTED" and "ROUTER PACKET ENDED" in the payload.
+    Returns a dictionary keyed by the router's MAC address with the following fields:
+      - "Number of Routes"
+      - "Timestamp"
+      - "Routes": a list of route lines (each starting with "Route:" or "Routing Protocols:")
+    """
+    router_statistics = {}
+    try:
+        packets = rdpcap(pcap_file)
+        for packet in packets:
+            if Raw in packet:
+                payload = packet[Raw].load.decode('utf-8', errors='ignore')
+                if "ROUTER PACKET STARTED" in payload and "ROUTER PACKET ENDED" in payload:
+                    lines = payload.split("\n")
+                    mac_line = next((line for line in lines if line.startswith("MAC:")), None)
+                    if mac_line:
+                        mac = mac_line.split("MAC:")[1].strip()
+                        num_routes_line = next((line for line in lines if line.startswith("Number of Routes:")), None)
+                        num_routes = num_routes_line.split("Number of Routes:")[1].strip() if num_routes_line else "N/A"
+                        timestamp_line = next((line for line in lines if line.startswith("Timestamp:")), None)
+                        timestamp = timestamp_line.split("Timestamp:")[1].strip() if timestamp_line else "N/A"
+                        # Collect route lines: lines that start with "Route:" or "Routing Protocols:"
+                        route_lines = [line.strip() for line in lines if line.startswith("Route:") or line.startswith("Routing Protocols:")]
+                        router_statistics[mac] = {
+                            "Number of Routes": num_routes,
+                            "Timestamp": timestamp,
+                            "Routes": route_lines
+                        }
+        return router_statistics
+    except Exception as e:
+        print(f"An error occurred while processing the pcap file: {e}")
+        return router_statistics
+
+def craft_router_to_cc2dc_protocol_payload(routerstats, CC_Name):
+    """
+    Craft the CC2DC protocol payload for router telemetry data.
+    
+    Format:
+        CC2DC ROUTER PACKET STARTED
+        <CC_Name>
+        <Number of Router Devices> (8 bits)
+        Time: YYYY-MM-DDTHH:mm:ss.SSS GMT
+        For every Router:
+            MAC: <MAC>
+            Number of Routes: <data>
+            Timestamp: <data>
+            For every route:
+                (The route details)
+        Checksum: <16-bit checksum>
+        CC2DC ROUTER PACKET ENDED
+    """
+    timenow = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
+    payload = "CC2DC ROUTER PACKET STARTED\n"
+    payload += f"{CC_Name}\n"
+    payload += f"{len(routerstats)}\n"
+    payload += f"{timenow} GMT\n"
+    for mac, stats in routerstats.items():
+        payload += f"{mac}\n"
+        payload += f"{stats.get('Number of Routes', 'N/A')}\n"
+        payload += f"{stats.get('Timestamp', 'N/A')}\n"
+        routes = stats.get("Routes", [])
+        for route in routes:
+            payload += f"{route}\n"
+    checksum = sum(ord(c) for c in payload) % 65536
+    payload += f"Checksum: {checksum}\n"
+    payload += "CC2DC ROUTER PACKET ENDED"
+    return payload
+
+def end2end_router_cc2dc(pcap_file, CC_Name):
+    """
+    End-to-end telemetry for router packets.
+    This function extracts router packets from the pcap file, crafts a CC2DC protocol
+    payload for router telemetry data, and saves it to a text file named "<ccname>_payload.txt".
+    """
+    routerstats = find_router_packets_scapy(pcap_file)
+    print("Router Statistics Extracted:")
+    print(routerstats)
+    tcp_payload = craft_router_to_cc2dc_protocol_payload(routerstats, CC_Name)
+    output_filename = f"{CC_Name.lower()}_payload.txt"
+    with open(output_filename, "a") as f:
+        f.write(tcp_payload)
+    print(f"Router payload saved to {output_filename}")
 
 if __name__ == "__main__":
 
@@ -418,4 +503,6 @@ if __name__ == "__main__":
         f.write(tcp_payload)
 
     print(f"Payload saved to {CC_Name.lower()}_payload.txt")
+
+    end2end_router_cc2dc(args.pcap_file, args.CC_Name)
 
