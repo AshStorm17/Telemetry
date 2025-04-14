@@ -64,6 +64,9 @@ def build_router_payload(mac, routing_info, timestamp):
         route_lines.append(
             f"Route: Dest={destination}, Gateway={gateway}, Dev={device}, Proto={protocol}, Scope={scope}, Src={src}"
         )
+        route_lines.append(
+            f"OSPF Neighbors: {routing_info["Ospf Neighbors"]}, OSPF Status: {routing_info["Ospf State"]}, BGP Data: {routing_info["BGP Data"]}"
+        )
         
     footer = "ROUTER PACKET ENDED"
     full_payload = "\n".join(header_lines + route_lines + [footer])
@@ -162,4 +165,5 @@ class EnhancedRouter:
             f"sendp(pkt, iface='{iface}')"
             '"'
         )
+        print("Payload: ", payload_bytes)
         self.router.cmd(cmd)
