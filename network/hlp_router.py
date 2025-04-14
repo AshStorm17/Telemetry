@@ -51,7 +51,8 @@ def build_router_payload(mac, routing_info, timestamp):
     header_lines.append(f"MAC: {mac}")
     num_routes = len(routing_info.get("routing_table", []))
     header_lines.append(f"Number of Routes: {num_routes}")
-    header_lines.append("Timestamp: " + timestamp.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3])
+    # Use ISO-like timestamp format with GMT appended
+    header_lines.append("Timestamp: " + timestamp.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + " GMT")
     
     route_lines = []
     for entry in routing_info.get("routing_table", []):
@@ -62,15 +63,24 @@ def build_router_payload(mac, routing_info, timestamp):
         scope = entry.get("scope", "N/A")
         src = entry.get("src", "N/A")
         route_lines.append(
-            f"Route: Dest={destination}, Gateway={gateway}, Dev={device}, Proto={protocol}, Scope={scope}, Src={src}"
+            f"Route: Dest: {destination}, Gateway: {gateway}, Dev: {device}, Proto: {protocol}, Scope: {scope}, Src: {src}"
         )
+        ospf_neighbors = routing_info.get("Ospf Neighbors", "N/A")
+        ospf_state = routing_info.get("Ospf State", "N/A")
+        bgp_data = routing_info.get("BGP Data", "N/A")
         route_lines.append(
-            f"OSPF Neighbors: {routing_info["Ospf Neighbors"]}, OSPF Status: {routing_info["Ospf State"]}, BGP Data: {routing_info["BGP Data"]}"
+            f"Routing Protocols: OSPF Neighbors: {ospf_neighbors}, OSPF State: {ospf_state}, BGP Data: {bgp_data}"
         )
         
     footer = "ROUTER PACKET ENDED"
-    full_payload = "\n".join(header_lines + route_lines + [footer])
+    # Join the payload without checksum
+    payload_without_checksum = "\n".join(header_lines + route_lines + [footer])
+    # Calculate checksum: sum of the ordinal values of each character modulo 65536
+    checksum_val = sum(ord(char) for char in payload_without_checksum) % 65536
+    # Append checksum in a new line with consistent colon separator
+    full_payload = payload_without_checksum + "\n" + f"Checksum: {checksum_val}"
     return full_payload
+
 
 # --- Enhanced Router Class Using Health Parameters ---
 class EnhancedRouter:
