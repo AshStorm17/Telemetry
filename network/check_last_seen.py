@@ -29,18 +29,18 @@ def update_last_seen(cc_name):
     current_time = datetime.now()
     threshold_seconds = 10
 
-    for row in rows:
-        mac = row["MAC"]
+    for i in range(len(rows)):
+        mac = rows[i]["MAC"]
         if mac in last_seen:
-            row["last_seen"] = last_seen[mac].strftime("%Y-%m-%dT%H:%M:%S.%f")
-        elif "last_seen" in row and row["last_seen"]:
+            rows[i]["last_seen"] = last_seen[mac].strftime("%Y-%m-%dT%H:%M:%S.%f")
+        elif "last_seen" in rows[i] and rows[i]["last_seen"]:
             try:
-                row_timestamp = datetime.strptime(row["last_seen"], "%Y-%m-%dT%H:%M:%S.%f")
+                row_timestamp = datetime.strptime(rows[i]["last_seen"], "%Y-%m-%dT%H:%M:%S.%f")
                 if (current_time - row_timestamp).total_seconds() > threshold_seconds:
                     send_sos_packet(cc_name, mac, row_timestamp)
             except ValueError:
-                print(f"Timestamp format error in CSV for MAC '{mac}': {row['last_seen']}")
-        elif "last_seen" not in row or not row["last_seen"]:
+                print(f"Timestamp format error in CSV for MAC '{mac}': {rows[i]['last_seen']}")
+        elif "last_seen" not in rows[i] or not rows[i]["last_seen"]:
             print(f"No last seen timestamp for MAC '{mac}'.")
 
     with open(filename, mode='w', newline='') as csvfile:
