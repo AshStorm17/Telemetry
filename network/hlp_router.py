@@ -58,8 +58,12 @@ def build_router_payload(mac, routing_info, timestamp):
         destination = entry.get("destination", "N/A")
         gateway = entry.get("gateway", "N/A")
         device = entry.get("device", "N/A")
-        raw_line = entry.get("raw", "")
-        route_lines.append(f"Route: Dest={destination}, Gateway={gateway}, Dev={device}, Raw=[{raw_line}]")
+        protocol = entry.get("protocol", "N/A")
+        scope = entry.get("scope", "N/A")
+        src = entry.get("src", "N/A")
+        route_lines.append(
+            f"Route: Dest={destination}, Gateway={gateway}, Dev={device}, Proto={protocol}, Scope={scope}, Src={src}"
+        )
         
     footer = "ROUTER PACKET ENDED"
     full_payload = "\n".join(header_lines + route_lines + [footer])
@@ -142,7 +146,7 @@ class EnhancedRouter:
         and send it as a UDP packet using Scapy encapsulated in an Ethernet frame.
         """
         now = datetime.datetime.utcnow()
-        # Use the get_routing_information function from HealthMonitoringRouter
+        # Use the updated get_routing_information function from HealthMonitoringRouter
         routing_info = self.router.get_routing_information()
         payload_str = build_router_payload(mac=self.router.MAC(), routing_info=routing_info, timestamp=now)
         payload_bytes = payload_str.encode('ascii')

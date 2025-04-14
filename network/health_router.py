@@ -193,39 +193,66 @@ class HealthMonitoringRouter(Node):
     def get_routing_information(self):
         """
         Retrieve routing table information using the 'ip route' command.
-        This method returns a dictionary containing a parsed routing table and the raw output.
+        Removes ANSI color codes from the output and parses each line into
+        a dictionary with keys: destination, gateway, device, protocol, scope, and src.
+        Returns a dictionary containing a list of routing entries and the raw output.
         """
+        import re
+        # Regex pattern to remove ANSI escape sequences
+        ansi_escape = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
+        
         routing_info = {}
         output = self.cmd("ip route")
-        if not output:
+        # Clean the output by removing ANSI codes
+        output_clean = ansi_escape.sub('', output)
+        if not output_clean:
             routing_info["error"] = "No routing information available"
             return routing_info
 
         routing_table = []
-        for line in output.splitlines():
-            # Create a dictionary for each routing entry.
-            # Example output line: "default via 192.168.1.1 dev eth0 proto dhcp metric 100"
+        for line in output_clean.splitlines():
+            line = line.strip()
+            # Remove surrounding square brackets if present
+            if line.startswith('[') and line.endswith(']'):
+                line = line[1:-1].strip()
             tokens = line.split()
             entry = {}
-            if tokens[0] == "default":
-                entry["destination"] = "default"
-                if "via" in tokens:
-                    via_index = tokens.index("via")
-                    entry["gateway"] = tokens[via_index + 1] if len(tokens) > via_index + 1 else None
-                if "dev" in tokens:
-                    dev_index = tokens.index("dev")
-                    entry["device"] = tokens[dev_index + 1] if len(tokens) > dev_index + 1 else None
-            else:
-                # For non-default routes, the first token typically is the destination network.
+            if tokens:
                 entry["destination"] = tokens[0]
-                if "via" in tokens:
-                    via_index = tokens.index("via")
-                    entry["gateway"] = tokens[via_index + 1] if len(tokens) > via_index + 1 else None
-                if "dev" in tokens:
-                    dev_index = tokens.index("dev")
-                    entry["device"] = tokens[dev_index + 1] if len(tokens) > dev_index + 1 else None
+            # Initialize defaults for optional values
+            entry["gateway"] = "N/A"
+            entry["device"] = "N/A"
+            entry["protocol"] = "N/A"
+            entry["scope"] = "N/A"
+            entry["src"] = "N/A"
+            # Process tokens looking for keywords and their following values
+            i = 0
+            while i < len(tokens):
+                token = tokens[i]
+                if token == "via" and i+1 < len(tokens):
+                    entry["gateway"] = tokens[i+1]
+                    i += 2
+                    continue
+                elif token == "dev" and i+1 < len(tokens):
+                    entry["device"] = tokens[i+1]
+                    i += 2
+                    continue
+                elif token == "proto" and i+1 < len(tokens):
+                    entry["protocol"] = tokens[i+1]
+                    i += 2
+                    continue
+                elif token == "scope" and i+1 < len(tokens):
+                    entry["scope"] = tokens[i+1]
+                    i += 2
+                    continue
+                elif token == "src" and i+1 < len(tokens):
+                    entry["src"] = tokens[i+1]
+                    i += 2
+                    continue
+                else:
+                    i += 1
             entry["raw"] = line
             routing_table.append(entry)
         routing_info["routing_table"] = routing_table
-        routing_info["raw_output"] = output
+        routing_info["raw_output"] = output_clean
         return routing_info
