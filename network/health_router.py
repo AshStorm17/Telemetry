@@ -255,4 +255,33 @@ class HealthMonitoringRouter(Node):
             routing_table.append(entry)
         routing_info["routing_table"] = routing_table
         routing_info["raw_output"] = output_clean
+
+        ospf_output = self.router.cmd('vtysh -c "show ip ospf neighbor"')
+        ospf_neighbors = 0
+        ospf_state = "Down"
+        for line in ospf_output.strip().splitlines():
+            if "Full" in line or "2-Way" in line:
+                ospf_neighbors += 1
+                ospf_state = "Full"
+        routing_info["Ospf Neighbors"] = ospf_neighbors
+        routing_info["Ospf State"] = ospf_state
+
+   
+        bgp_output = self.router.cmd('vtysh -c "show ip bgp summary"')
+        bgp_peer = "unknown"
+        bgp_state = "Idle"
+        learned_routes = 0
+        for line in bgp_output.strip().splitlines():
+            if line.startswith("Neighbor") or line.strip() == "":
+                continue
+            parts = line.split()
+            if len(parts) >= 9 and parts[0].count('.') == 3:
+                bgp_peer = parts[0]
+                try:
+                    learned_routes = int(parts[8])
+                    bgp_state = "Established"
+                except ValueError:
+                    bgp_state = parts[8]
+
+        routing_info["BGP Data"] = f"BGP Peer {bgp_peer}: {bgp_state}, Learned Routes: {learned_routes}"
         return routing_info
