@@ -1,6 +1,6 @@
 import plotly.graph_objects as go
 import os
-from packet_parser import parse_csv
+# from utils.packet_parser import parse_csv
 
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))

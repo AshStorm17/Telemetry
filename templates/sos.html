@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+
+{% block title %}SOS Information - Network Telemetry Framework{% endblock %}
+
+{% block content %}
+<div class="sos-container">
+    <div class="sos-header">
+        <h1><i class="fas fa-exclamation-triangle"></i> SOS Information</h1>
+        <a href="{{ url_for('index') }}" class="back-button"><i class="fas fa-arrow-left"></i> Back to Home</a>
+    </div>
+    
+    <div class="sos-content">
+        <div class="sos-card emergency">
+            <div class="sos-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="sos-info">
+                <h2>Network Emergency</h2>
+                <p>Critical issues that require immediate attention</p>
+                <div class="contact-info">
+                    <p><i class="fas fa-phone"></i> Emergency Hotline: +1-800-555-0199</p>
+                    <p><i class="fas fa-envelope"></i> emergency@networktelemetry.com</p>
+                </div>
+                <a href="#" class="emergency-action-btn">Initiate Emergency Protocol</a>
+            </div>
+        </div>
+        
+        <div class="sos-card protocols">
+            <div class="sos-icon">
+                <i class="fas fa-clipboard-list"></i>
+            </div>
+            <div class="sos-info">
+                <h2>Emergency Protocols</h2>
+                <ul>
+                    <li><i class="fas fa-check-circle"></i> Isolate affected network segments</li>
+                    <li><i class="fas fa-check-circle"></i> Contact network administrator</li>
+                    <li><i class="fas fa-check-circle"></i> Implement containment measures</li>
+                    <li><i class="fas fa-check-circle"></i> Document the incident</li>
+                    <li><i class="fas fa-check-circle"></i> Begin recovery procedures</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="sos-card contacts">
+            <div class="sos-icon">
+                <i class="fas fa-address-book"></i>
+            </div>
+            <div class="sos-info">
+                <h2>Emergency Contacts</h2>
+                <div class="contact-list">
+                    <div class="contact">
+                        <div class="contact-avatar">
+                            <i class="fas fa-user-tie"></i>
+                        </div>
+                        <div class="contact-details">
+                            <p class="contact-name">Network Operations Center</p>
+                            <p class="contact-role">Available 24/7</p>
+                            <p class="contact-phone"><i class="fas fa-phone"></i> +1-888-555-0123</p>
+                        </div>
+                        <button class="contact-call-btn"><i class="fas fa-phone"></i></button>
+                    </div>
+                    <div class="contact">
+                        <div class="contact-avatar">
+                            <i class="fas fa-user-shield"></i>
+                        </div>
+                        <div class="contact-details">
+                            <p class="contact-name">Security Team</p>
+                            <p class="contact-role">For security breaches</p>
+                            <p class="contact-phone"><i class="fas fa-phone"></i> +1-888-555-0124</p>
+                        </div>
+                        <button class="contact-call-btn"><i class="fas fa-phone"></i></button>
+                    </div>
+                    <div class="contact">
+                        <div class="contact-avatar">
+                            <i class="fas fa-user-cog"></i>
+                        </div>
+                        <div class="contact-details">
+                            <p class="contact-name">System Administrator</p>
+                            <p class="contact-role">For system-wide issues</p>
+                            <p class="contact-phone"><i class="fas fa-phone"></i> +1-888-555-0125</p>
+                        </div>
+                        <button class="contact-call-btn"><i class="fas fa-phone"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="sos-card resources">
+            <div class="sos-icon">
+                <i class="fas fa-book-open"></i>
+            </div>
+            <div class="sos-info">
+                <h2>Emergency Resources</h2>
+                <div class="resource-list">
+                    <a href="#" class="resource-item">
+                        <i class="fas fa-file-pdf"></i>
+                        <span>Network Recovery Guide</span>
+                    </a>
+                    <a href="#" class="resource-item">
+                        <i class="fas fa-file-alt"></i>
+                        <span>Security Incident Response Plan</span>
+                    </a>
+                    <a href="#" class="resource-item">
+                        <i class="fas fa-file-code"></i>
+                        <span>Network Diagnostics Toolkit</span>
+                    </a>
+                    <a href="#" class="resource-item">
+                        <i class="fas fa-file-video"></i>
+                        <span>Training: Handling Network Emergencies</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="sos-status-panel">
+        <h2>Current Network Status</h2>
+        <div class="status-indicators">
+            <div class="status-item">
+                <div class="status-label">Academic Area</div>
+                <div class="status-value normal">Normal</div>
+            </div>
+            <div class="status-item">
+                <div class="status-label">Hostel Area</div>
+                <div class="status-value normal">Normal</div>
+            </div>
+            <div class="status-item">
+                <div class="status-label">Housing Area</div>
+                <div class="status-value normal">Normal</div>
+            </div>
+            <div class="status-item">
+                <div class="status-label">Last Checked</div>
+                <div class="status-value">Just now</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/sos.js') }}"></script>
+{% endblock %}

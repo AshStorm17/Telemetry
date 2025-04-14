@@ -1,0 +1,309 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ cluster_name }} - Network Telemetry Framework{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Specific styles for this page that don't need to go in the main CSS */
+    .dashboard-loader {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: var(--background-color);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        transition: opacity 0.5s;
+    }
+    
+    .dashboard-loader.loaded {
+        opacity: 0;
+        pointer-events: none;
+    }
+    
+    .loader-spinner {
+        width: 80px;
+        height: 80px;
+        border: 8px solid var(--border-color);
+        border-top: 8px solid var(--primary-color);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-loader">
+    <div class="loader-spinner"></div>
+</div>
+
+<div class="cluster-header">
+    <div class="cluster-title">
+        <h1>Cluster Center {{ cluster_id }}: {{ cluster_name }}</h1>
+        <p class="timestamp">Last updated: <span id="current-time">Loading...</span></p>
+    </div>
+    <div class="cluster-actions">
+        <a href="{{ url_for('firewall', cluster_id=cluster_id) }}" class="firewall-button"><i class="fas fa-shield-alt"></i> View Firewall</a>
+    </div>
+</div>
+
+<div class="dashboard-container">
+    <!-- Device Information Panel -->
+    <div class="device-panel">
+        <h2 class="panel-title"><i class="fas fa-server"></i> Device Information</h2>
+        <div class="device-grid">
+            <div class="device-card">
+                <div class="device-icon"><i class="fas fa-router"></i></div>
+                <h3>Router</h3>
+                <div class="device-details">
+                    <p><span>MAC:</span> {{ devices.router.mac }}</p>
+                    <p><span>IP:</span> {{ devices.router.ip }}</p>
+                </div>
+                <div class="device-status online">Online</div>
+            </div>
+            
+            <div class="device-card">
+                <div class="device-icon"><i class="fas fa-network-wired"></i></div>
+                <h3>Switch 1</h3>
+                <div class="device-details">
+                    <p><span>MAC:</span> {{ devices.switch1.mac }}</p>
+                </div>
+                <div class="device-status online">Online</div>
+            </div>
+            
+            <div class="device-card">
+                <div class="device-icon"><i class="fas fa-network-wired"></i></div>
+                <h3>Switch 2</h3>
+                <div class="device-details">
+                    <p><span>MAC:</span> {{ devices.switch2.mac }}</p>
+                </div>
+                <div class="device-status online">Online</div>
+            </div>
+            
+            <div class="device-card">
+                <div class="device-icon"><i class="fas fa-shield-alt"></i></div>
+                <h3>Firewall</h3>
+                <div class="device-details">
+                    <p><span>MAC:</span> {{ devices.firewall.mac }}</p>
+                    <p><span>IP:</span> {{ devices.firewall.ip }}</p>
+                </div>
+                <div class="device-status online">Online</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Summary Statistics Panel -->
+    <div class="stats-panel">
+        <h2 class="panel-title"><i class="fas fa-chart-pie"></i> Summary Statistics</h2>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value">{{ stats.total_packets }}</div>
+                <div class="stat-label">Total Packets</div>
+                <div class="stat-icon"><i class="fas fa-envelope"></i></div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-value">{{ stats.total_bytes }}</div>
+                <div class="stat-label">Total Bytes</div>
+                <div class="stat-icon"><i class="fas fa-database"></i></div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-value">{{ stats.total_errors }}</div>
+                <div class="stat-label">Total Errors</div>
+                <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-value">{{ stats.devices_count }}</div>
+                <div class="stat-label">Connected Devices</div>
+                <div class="stat-icon"><i class="fas fa-server"></i></div>
+            </div>
+        </div>
+        
+        <div class="timestamp-info">
+            <div class="timestamp-card">
+                <div class="timestamp-label">Latest Timestamp</div>
+                <div class="timestamp-value">{{ stats.latest_timestamp }}</div>
+            </div>
+            
+            <div class="timestamp-card">
+                <div class="timestamp-label">Oldest Timestamp</div>
+                <div class="timestamp-value">{{ stats.oldest_timestamp }}</div>
+            </div>
+            
+            <div class="timestamp-card">
+                <div class="timestamp-label">Devices in Previous Packet</div>
+                <div class="timestamp-value">{{ stats.prev_devices_count }}</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Metrics Grid - Main visualization area -->
+    <div class="metrics-grid">
+        <!-- Section 1: Rx Packets -->
+        <div class="metric-card">
+            <div class="metric-header">
+                <h3><i class="fas fa-download"></i> Rx Packets</h3>
+                <div class="metric-controls">
+                    <button class="refresh-btn" data-target="rx-packets"><i class="fas fa-sync-alt"></i></button>
+                    <button class="expand-btn" data-target="rx-packets"><i class="fas fa-expand-alt"></i></button>
+                </div>
+            </div>
+            <div class="graph-container" id="rx-packets" data-url="{{ graph_files.rx_total_packets }}"></div>
+        </div>
+        
+        <!-- Section 2: Tx Packets -->
+        <div class="metric-card">
+            <div class="metric-header">
+                <h3><i class="fas fa-upload"></i> Tx Packets</h3>
+                <div class="metric-controls">
+                    <button class="refresh-btn" data-target="tx-packets"><i class="fas fa-sync-alt"></i></button>
+                    <button class="expand-btn" data-target="tx-packets"><i class="fas fa-expand-alt"></i></button>
+                </div>
+            </div>
+            <div class="graph-container" id="tx-packets" data-url="{{ graph_files.tx_total_packets }}"></div>
+        </div>
+        
+        <!-- Section 3: Rx Bytes -->
+        <div class="metric-card">
+            <div class="metric-header">
+                <h3><i class="fas fa-download"></i> Rx Bytes</h3>
+                <div class="metric-controls">
+                    <button class="refresh-btn" data-target="rx-bytes"><i class="fas fa-sync-alt"></i></button>
+                    <button class="expand-btn" data-target="rx-bytes"><i class="fas fa-expand-alt"></i></button>
+                </div>
+            </div>
+            <div class="graph-container" id="rx-bytes" data-url="{{ graph_files.rx_bytes }}"></div>
+        </div>
+        
+        <!-- Section 4: Tx Bytes -->
+        <div class="metric-card">
+            <div class="metric-header">
+                <h3><i class="fas fa-upload"></i> Tx Bytes</h3>
+                <div class="metric-controls">
+                    <button class="refresh-btn" data-target="tx-bytes"><i class="fas fa-sync-alt"></i></button>
+                    <button class="expand-btn" data-target="tx-bytes"><i class="fas fa-expand-alt"></i></button>
+                </div>
+            </div>
+            <div class="graph-container" id="tx-bytes" data-url="{{ graph_files.tx_bytes }}"></div>
+        </div>
+        
+        <!-- Section 5: Rx Errors -->
+        <div class="metric-card">
+            <div class="metric-header">
+                <h3><i class="fas fa-exclamation-circle"></i> Rx Errors</h3>
+                <div class="metric-controls">
+                    <button class="refresh-btn" data-target="rx-errors"><i class="fas fa-sync-alt"></i></button>
+                    <button class="expand-btn" data-target="rx-errors"><i class="fas fa-expand-alt"></i></button>
+                </div>
+            </div>
+            <div class="graph-container" id="rx-errors" data-url="{{ graph_files.rx_errors }}"></div>
+        </div>
+        
+        <!-- Section 6: Tx Errors -->
+        <div class="metric-card">
+            <div class="metric-header">
+                <h3><i class="fas fa-exclamation-circle"></i> Tx Errors</h3>
+                <div class="metric-controls">
+                    <button class="refresh-btn" data-target="tx-errors"><i class="fas fa-sync-alt"></i></button>
+                    <button class="expand-btn" data-target="tx-errors"><i class="fas fa-expand-alt"></i></button>
+                </div>
+            </div>
+            <div class="graph-container" id="tx-errors" data-url="{{ graph_files.tx_errors }}"></div>
+        </div>
+        
+        <!-- Section 7: Utilization -->
+        <div class="metric-card">
+            <div class="metric-header">
+                <h3><i class="fas fa-tachometer-alt"></i> Utilization</h3>
+                <div class="metric-controls">
+                    <button class="refresh-btn" data-target="utilization"><i class="fas fa-sync-alt"></i></button>
+                    <button class="expand-btn" data-target="utilization"><i class="fas fa-expand-alt"></i></button>
+                </div>
+            </div>
+            <div class="graph-container" id="utilization" data-url="{{ graph_files.rx_utilization }}"></div>
+        </div>
+        
+        <!-- Section 8: Buffer Occupancy -->
+        <div class="metric-card">
+            <div class="metric-header">
+                <h3><i class="fas fa-memory"></i> Buffer Occupancy</h3>
+                <div class="metric-controls">
+                    <button class="refresh-btn" data-target="buffer-occupancy"><i class="fas fa-sync-alt"></i></button>
+                    <button class="expand-btn" data-target="buffer-occupancy"><i class="fas fa-expand-alt"></i></button>
+                </div>
+            </div>
+            <div class="graph-container" id="buffer-occupancy" data-url="{{ graph_files.buffer_occupancy }}"></div>
+        </div>
+        
+        <!-- Section 9: Throughput -->
+        <div class="metric-card">
+            <div class="metric-header">
+                <h3><i class="fas fa-bolt"></i> Throughput</h3>
+                <div class="metric-controls">
+                    <button class="refresh-btn" data-target="throughput"><i class="fas fa-sync-alt"></i></button>
+                    <button class="expand-btn" data-target="throughput"><i class="fas fa-expand-alt"></i></button>
+                </div>
+            </div>
+            <div class="graph-container" id="throughput" data-url="{{ graph_files.throughput }}"></div>
+        </div>
+    </div>
+    
+    <!-- Collage View -->
+    <div class="collage-section">
+        <h2 class="panel-title"><i class="fas fa-th"></i> Metrics Overview</h2>
+        <div class="collage-grid">
+            <div class="collage-item">
+                <h4>Rx Utilization</h4>
+                <div class="graph-container small" data-url="{{ graph_files.rx_utilization }}"></div>
+            </div>
+            <div class="collage-item">
+                <h4>Tx Utilization</h4>
+                <div class="graph-container small" data-url="{{ graph_files.tx_utilization }}"></div>
+            </div>
+            <div class="collage-item">
+                <h4>Throughput</h4>
+                <div class="graph-container small" data-url="{{ graph_files.throughput }}"></div>
+            </div>
+            <div class="collage-item">
+                <h4>Total Bytes</h4>
+                <div class="graph-container small" data-url="{{ graph_files.total_bytes }}"></div>
+            </div>
+            <div class="collage-item">
+                <h4>Total Errors</h4>
+                <div class="graph-container small" data-url="{{ graph_files.total_errors }}"></div>
+            </div>
+            <div class="collage-item">
+                <h4>Total Packets</h4>
+                <div class="graph-container small" data-url="{{ graph_files.total_packets }}"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for expanded graphs -->
+<div class="graph-modal" id="graph-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modal-title">Graph Title</h3>
+            <button class="close-modal"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="expanded-graph-container" id="expanded-graph"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/cluster.js') }}"></script>
+{% endblock %}
