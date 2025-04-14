@@ -1,4 +1,12 @@
 import csv
+import os
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from flask import session
+from app import app
+from models import db
+from models.telemetry import TelemetryData
 
 def parse_csv(filename):
     swstats_dicts = []
@@ -38,6 +46,16 @@ def parse_csv(filename):
                 for i, key in enumerate(keys):
                     stats[key] = row[index + 6 + i]
 
+                # Store each stat in the database
+                for parameter_name, value in stats.items():
+                    telemetry_entry = TelemetryData(
+                        timestamp=timenow,
+                        mac=mac,
+                        parameter_name=parameter_name,
+                        value=float(value) if value.replace('.', '', 1).isdigit() else 0.0
+                    )
+                    db.session.add(telemetry_entry)
+                
                 swstats[mac] = stats
                 index += 6 + len(keys)
 
@@ -75,4 +93,5 @@ def main():
         print(f"Error: {e}")
 
 if __name__ == "__main__":
-    main()
+    with app.app_context():
+        main()

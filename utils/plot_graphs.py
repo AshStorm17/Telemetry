@@ -2,87 +2,136 @@ import plotly.graph_objects as go
 import os
 from utils.packet_parser import parse_csv
 
-def generate_graph(data, filename_prefix, parameter_name):
-    x_vals = []
-    y_vals = []
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from flask import session
+from app import app
+from models import db
+from models.telemetry import TelemetryData
+
+def generate_live_graphs(session, filename_prefix="network_stats"):
+    """
+    Generate live graphs for each MAC and each parameter.
+    """
+    base_path = '../static/graphs'
+    os.makedirs(base_path, exist_ok=True)
+
+    # Query distinct MAC addresses and parameters
+    mac_addresses = session.query(TelemetryData.mac).distinct().all()
+    parameters = session.query(TelemetryData.parameter_name).distinct().all()
+
+    results = {}
+
+    for mac_tuple in mac_addresses:
+        mac = mac_tuple[0]
+        for param_tuple in parameters:
+            parameter_name = param_tuple[0]
+
+            # Query data for the specific MAC and parameter
+            data = session.query(TelemetryData).filter_by(mac=mac, parameter_name=parameter_name).order_by(TelemetryData.timestamp).all()
+
+            if not data:
+                continue
+
+            x_vals = [entry.timestamp for entry in data]
+            y_vals = [entry.value for entry in data]
+
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(
+                x=x_vals,
+                y=y_vals,
+                mode='lines+markers',
+                name=f"{mac} - {parameter_name}"
+            ))
+
+            fig.update_layout(
+                title=f"{parameter_name} over Time for {mac}",
+                xaxis_title="Timestamp",
+                yaxis_title=parameter_name
+            )
+
+            html_path = os.path.join(base_path, f"{filename_prefix}_{mac}_{parameter_name.replace(' ', '_')}.html")
+            png_path = os.path.join(base_path, f"{filename_prefix}_{mac}_{parameter_name.replace(' ', '_')}.png")
+
+            fig.write_html(html_path)
+            fig.write_image(png_path)  # Requires `kaleido`
+
+            results[f"{mac}_{parameter_name}"] = {
+                'html': html_path,
+                'png': png_path
+            }
+
+    return results
+
+def generate_graph(data, filename_prefix):
+    """
+    Generate graphs for each MAC and each parameter using parsed CSV data.
+    """
+    base_path = '../static/graphs'
+    os.makedirs(base_path, exist_ok=True)
+
+    results = {}
 
     for packet in data:
         timestamp = packet['Timestamp']
         for mac, stats in packet['Stats'].items():
-            if parameter_name in stats:
-                x_vals.append(timestamp)
-                y_vals.append(float(stats[parameter_name]))
+            for parameter_name, value in stats.items():
+                # Initialize graph data for each MAC and parameter if not already done
+                if (mac, parameter_name) not in results:
+                    results[(mac, parameter_name)] = {
+                        'x_vals': [],
+                        'y_vals': []
+                    }
 
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(
-        x=x_vals,
-        y=y_vals,
-        mode='lines+markers',
-        name=parameter_name
-    ))
+                # Append timestamp and value to the graph data
+                results[(mac, parameter_name)]['x_vals'].append(timestamp)
+                results[(mac, parameter_name)]['y_vals'].append(float(value) if value.replace('.', '', 1).isdigit() else 0.0)
 
-    fig.update_layout(
-        title=f"{parameter_name} over Time",
-        xaxis_title="Timestamp",
-        yaxis_title=parameter_name
-    )
+    # Generate graphs for each MAC and parameter
+    graph_paths = {}
+    for (mac, parameter_name), graph_data in results.items():
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(
+            x=graph_data['x_vals'],
+            y=graph_data['y_vals'],
+            mode='lines+markers',
+            name=f"{mac} - {parameter_name}"
+        ))
 
-    base_path = '../static/graphs'
-    os.makedirs(base_path, exist_ok=True)
+        fig.update_layout(
+            title=f"{parameter_name} over Time for {mac}",
+            xaxis_title="Timestamp",
+            yaxis_title=parameter_name
+        )
 
-    html_path = os.path.join(base_path, f"{filename_prefix}_{parameter_name.replace(' ', '_')}.html")
-    png_path = os.path.join(base_path, f"{filename_prefix}_{parameter_name.replace(' ', '_')}.png")
+        html_path = os.path.join(base_path, f"{filename_prefix}_{mac}_{parameter_name.replace(' ', '_')}.html")
+        png_path = os.path.join(base_path, f"{filename_prefix}_{mac}_{parameter_name.replace(' ', '_')}.png")
 
-    fig.write_html(html_path)
-    fig.write_image(png_path)  # Requires `kaleido`
+        fig.write_html(html_path)
+        fig.write_image(png_path)  # Requires `kaleido`
 
-    return {
-        'html': html_path,
-        'png': png_path
-    }
+        graph_paths[f"{mac}_{parameter_name}"] = {
+            'html': html_path,
+            'png': png_path
+        }
 
-def generate_all_graphs(csv_path, filename_prefix="network_stats"):
-    try:
-        packets = parse_csv(csv_path)
-        parameters = [
-            'Total Packets',
-            'Total Bytes',
-            'Average Rx Utilization',
-            'Average Tx Utilization',
-            'Total Errors',
-            'Average Throughput (Mbps)',
-            'Max Tx Bytes'
-        ]
+    return graph_paths
 
-        results = {}
-        for param in parameters:
-            results[param] = generate_graph(packets, filename_prefix, param)
-        return results
-    except Exception as e:
-        print(f"Error generating graphs: {e}")
-        return {}
     
 if __name__ == "__main__":
-    # Run this when graph_utils.py is executed directly
-    filename = '../network/dc_data.csv'
-    try:
-        all_packets = parse_csv(filename)
+    with app.app_context():
+        filename = '../network/dc_data.csv'
+        try:
+            # Parse the CSV file
+            packets = parse_csv(filename)
 
-        parameters = [
-            'Total Packets',
-            'Total Bytes',
-            'Average Rx Utilization',
-            'Average Tx Utilization',
-            'Total Errors',
-            'Average Throughput (Mbps)',
-            'Max Tx Bytes'
-        ]
+            # Generate graphs
+            results = generate_graph(packets, filename_prefix="network_stats")
+            for key, paths in results.items():
+                print(f"Generated {key} graphs:")
+                print(f" → HTML: {paths['html']}")
+                print(f" → PNG : {paths['png']}")
 
-        for param in parameters:
-            paths = generate_graph(all_packets, filename_prefix="network_stats", parameter_name=param)
-            print(f"Generated {param} graphs:")
-            print(f" → HTML: {paths['html']}")
-            print(f" → PNG : {paths['png']}")
-
-    except Exception as e:
-        print(f"Error generating graphs: {e}")
+        except Exception as e:
+            print(f"Error: {e}")
