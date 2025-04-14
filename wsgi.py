@@ -1,5 +1,5 @@
 # wsgi.py
-from app import app, socketio, telemetry_collector
+from app import app, socketio
 import time
 import threading
 from utils.plot_graphs import generate_graph
@@ -15,9 +15,6 @@ def live_graph_updater(interval=5):  # update every 5 seconds
         except Exception as e:
             print(f"[Live Graph] Error generating graphs: {e}")
         time.sleep(interval)
-
-# Start telemetry collection
-telemetry_collector.start_collection()
 
 # Start live graph generation thread
 graph_thread = threading.Thread(target=live_graph_updater, daemon=True)

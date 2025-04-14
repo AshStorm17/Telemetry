@@ -1,6 +1,6 @@
 import plotly.graph_objects as go
 import os
-# from utils.packet_parser import parse_csv
+from utils.packet_parser import parse_csv
 
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -64,7 +64,7 @@ def generate_live_graphs(session, filename_prefix="network_stats"):
 
     return results
 
-def generate_graph(data, filename_prefix):
+def generate_graph(data, filename_prefix="network_stats"):
     """
     Generate graphs for each MAC and each parameter using parsed CSV data.
     """

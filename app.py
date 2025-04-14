@@ -2,17 +2,11 @@ from flask import Flask, render_template, jsonify, send_from_directory
 from flask_socketio import SocketIO
 import os
 import glob
-from utils.telemetry import TelemetryCollector
 
 app = Flask(__name__)
 
 # Initialize extensions
 socketio = SocketIO(app, cors_allowed_origins="*")
-
-
-# Initialize telemetry collector
-telemetry_collector = TelemetryCollector(app)
-telemetry_collector.init_app(app, socketio)
 
 @app.route("/")
 def index():
