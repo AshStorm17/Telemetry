@@ -85,14 +85,6 @@ class HealthMonitoringRouter(Node):
         self.last_stats_time = time.time()  # Record the start time
         self.capture_initial_stats()  # Capture initial interface statistics
         info(f"{self.name} initialized and ready for health monitoring.\n")
-    
-    def start_health_monitoring(self):
-        """
-        Start health monitoring by capturing initial stats.
-        """
-        self.capture_initial_stats()
-        info(f"Health monitoring started for {self.name}.\n")
-        self.last_stats_time = time.time()  # Reset last stats time
 
     def capture_initial_stats(self):
         """
@@ -197,3 +189,43 @@ class HealthMonitoringRouter(Node):
         health_data['cpu_usage_percent'] = measure_cpu_utilization(self, 1)
         health_data['memory_usage_percent'] = measure_memory_usage(self)
         return health_data
+
+    def get_routing_information(self):
+        """
+        Retrieve routing table information using the 'ip route' command.
+        This method returns a dictionary containing a parsed routing table and the raw output.
+        """
+        routing_info = {}
+        output = self.cmd("ip route")
+        if not output:
+            routing_info["error"] = "No routing information available"
+            return routing_info
+
+        routing_table = []
+        for line in output.splitlines():
+            # Create a dictionary for each routing entry.
+            # Example output line: "default via 192.168.1.1 dev eth0 proto dhcp metric 100"
+            tokens = line.split()
+            entry = {}
+            if tokens[0] == "default":
+                entry["destination"] = "default"
+                if "via" in tokens:
+                    via_index = tokens.index("via")
+                    entry["gateway"] = tokens[via_index + 1] if len(tokens) > via_index + 1 else None
+                if "dev" in tokens:
+                    dev_index = tokens.index("dev")
+                    entry["device"] = tokens[dev_index + 1] if len(tokens) > dev_index + 1 else None
+            else:
+                # For non-default routes, the first token typically is the destination network.
+                entry["destination"] = tokens[0]
+                if "via" in tokens:
+                    via_index = tokens.index("via")
+                    entry["gateway"] = tokens[via_index + 1] if len(tokens) > via_index + 1 else None
+                if "dev" in tokens:
+                    dev_index = tokens.index("dev")
+                    entry["device"] = tokens[dev_index + 1] if len(tokens) > dev_index + 1 else None
+            entry["raw"] = line
+            routing_table.append(entry)
+        routing_info["routing_table"] = routing_table
+        routing_info["raw_output"] = output
+        return routing_info
