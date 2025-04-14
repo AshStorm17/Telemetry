@@ -1,6 +1,6 @@
 import plotly.graph_objects as go
 import os
-from utils.packet_parser import parse_csv
+from packet_parser import parse_csv
 
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -51,8 +51,8 @@ def generate_live_graphs(session, filename_prefix="network_stats"):
                 yaxis_title=parameter_name
             )
 
-            html_path = os.path.join(base_path, f"{filename_prefix}_{mac}_{parameter_name.replace(' ', '_')}.html")
-            png_path = os.path.join(base_path, f"{filename_prefix}_{mac}_{parameter_name.replace(' ', '_')}.png")
+            html_path = os.path.join(base_path, f"{filename_prefix}_{mac.replace(':', '-')}_{parameter_name.replace(' ', '_')}.html")
+            png_path = os.path.join(base_path, f"{filename_prefix}_{mac.replace(':', '-')}_{parameter_name.replace(' ', '_')}.png")
 
             fig.write_html(html_path)
             fig.write_image(png_path)  # Requires `kaleido`
@@ -105,8 +105,8 @@ def generate_graph(data, filename_prefix):
             yaxis_title=parameter_name
         )
 
-        html_path = os.path.join(base_path, f"{filename_prefix}_{mac}_{parameter_name.replace(' ', '_')}.html")
-        png_path = os.path.join(base_path, f"{filename_prefix}_{mac}_{parameter_name.replace(' ', '_')}.png")
+        html_path = os.path.join(base_path, f"{filename_prefix}_{mac.replace(':', '-')}_{parameter_name.replace(' ', '_')}.html")
+        png_path = os.path.join(base_path, f"{filename_prefix}_{mac.replace(':', '-')}_{parameter_name.replace(' ', '_')}.png")
 
         fig.write_html(html_path)
         fig.write_image(png_path)  # Requires `kaleido`
