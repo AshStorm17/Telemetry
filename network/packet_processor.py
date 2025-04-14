@@ -365,7 +365,7 @@ def craft_to_cc2dc_protocol_payload(swstats, CC_Name):
     # Add a checksum for the entire payload
     checksum = sum([ord(c) for c in tcppayload]) % 65536
     tcppayload += f"Checksum: {checksum}\n"
-    tcppayload += "CC2DC PACKET ENDED"
+    tcppayload += "CC2DC PACKET ENDED\n\n"
 
 
     return tcppayload
