@@ -64,13 +64,16 @@ def generate_live_graphs(session, filename_prefix="network_stats"):
 
     return results
 
-def generate_graph(data, filename_prefix="network_stats"):
+def generate_graph(file, filename_prefix="network_stats"):
     """
     Generate graphs for each MAC and each parameter using parsed CSV data.
     """
     base_path = '../static/graphs'
     os.makedirs(base_path, exist_ok=True)
 
+    with app.app_context():
+        data = parse_csv(file)
+    
     results = {}
 
     for packet in data:
@@ -123,11 +126,7 @@ if __name__ == "__main__":
     with app.app_context():
         filename = '../network/dc_data.csv'
         try:
-            # Parse the CSV file
-            packets = parse_csv(filename)
-
-            # Generate graphs
-            results = generate_graph(packets, filename_prefix="network_stats")
+            results = generate_graph(filename, filename_prefix="network_stats")
             for key, paths in results.items():
                 print(f"Generated {key} graphs:")
                 print(f" → HTML: {paths['html']}")
