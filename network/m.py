@@ -12,6 +12,7 @@ import socket
 from health_switch import HealthMonitoringSwitch
 from packet_processor import end2end_cc2dc
 from hlp_switch import *
+import os
 
 class CustomTopo(Topo):
     def build(self, n=3):
@@ -55,7 +56,12 @@ def simpleTest():
     print("dc: ", dc.IP())
     print("s1: ", s1.IP())
     print("s1h: ", s1h.IP())
-        
+
+
+    cc.cmd(f'python3 init_last_seen.py cc1 {s1.MAC()} {h1.MAC()} {h2.MAC()}')
+    dc.cmd(f'python3 dc_sos_server.py')
+    cc.cmd('touch cc1_tcp_payload.txt')
+    cc.cmd('mkdir cc1_tcp_payload')
 
     h2.cmd('iperf -s -u -i 1 > iperf_server_output &')
     time.sleep(1)
@@ -78,6 +84,13 @@ def simpleTest():
                 cc.cmd('python3 packet_processor.py cc1.pcap cc1')
                 # Send the data to the dc
                 cc.cmd('cat cc1_payload.txt | nc -u -w 1 {} 12345'.format(dc.IP())) # send data as UDP
+                
+                cc.cmd('python3 check_last_seen.py cc1.pcap cc1')
+                cc.cmd('python3 send_sos_packets.py cc1')
+                for sos_packet in os.listdir("cc1_tcp_payload/"):
+                    cc.cmd(f'cat cc1_tcp_payload/{sos_packet}.txt | nc -t -w 1 {dc.IP()} 23456')
+                    cc.cmd(f'rm cc1_tcp_payload/{sos_packet}.txt')
+
                 print(f"cc1: Sent UDP packet at {time.time()}")
                 # Delete the file
                 cc.cmd('rm cc1.pcap')
