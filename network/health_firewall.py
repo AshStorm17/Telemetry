@@ -68,22 +68,19 @@ def measure_memory_usage(device):
         return 100 * used / total
     return None
 
-# Health Monitoring for Routers
-
-class HealthMonitoringRouter(Node):
-    """Custom router that captures interface and system health parameters."""
+class HealthMonitoringFirewall(Node):
+    """
+    Custom firewall health monitoring class that extends router metrics with
+    firewall-specific data such as rule hit counters.
+    """
     def __init__(self, name, **params):
         super().__init__(name, **params)
         self.last_stats_time = None
         self.initial_stats = {}
 
-    def start(self):
-        """
-        Initialize the router, record the current time, and capture initial stats.
-        """
-        # Perform any necessary initialization for the router
-        self.last_stats_time = time.time()  # Record the start time
-        self.capture_initial_stats()  # Capture initial interface statistics
+    def start(self, *args, **kwargs):
+        self.last_stats_time = time.time()
+        self.capture_initial_stats()
         info(f"{self.name} initialized and ready for health monitoring.\n")
 
     def capture_initial_stats(self):
@@ -103,7 +100,6 @@ class HealthMonitoringRouter(Node):
             lines = output.splitlines()
             rx_values = None
             tx_values = None
-            # Look for 'RX:' and 'TX:' headers; assume the next non-empty line is the value line.
             for i, line in enumerate(lines):
                 if line.strip().startswith("RX:"):
                     if i+1 < len(lines):
@@ -136,14 +132,33 @@ class HealthMonitoringRouter(Node):
             }
         return stats
 
+    def _get_firewall_rule_stats(self):
+        """
+        Retrieve firewall-specific statistics using iptables.
+        This parses the verbose list output to sum up packet and byte counts.
+        """
+        output = self.cmd("iptables -L -v -n")
+        total_packets = 0
+        total_bytes = 0
+        for line in output.splitlines():
+            parts = line.split()
+            # iptables output lines for rules typically start with counter values.
+            if parts and parts[0].isdigit():
+                total_packets += int(parts[0])
+                total_bytes += int(parts[1])
+        return {
+            "total_firewall_packets": total_packets,
+            "total_firewall_bytes": total_bytes,
+            "raw_rule_output": output
+        }
+
     def get_health_parameters(self, duration=5, link_capacity_bps=10e6):
         """
-        Calculate per-interface rates and system resource usage over the given duration.
-        Also returns CPU and memory utilization.
-        Returns a dictionary keyed by interface name and overall system parameters.
+        Calculate per-interface and firewall-specific health metrics over the given duration.
+        In addition to interface rates, CPU, and memory utilization, firewall rule statistics are returned.
         """
         if self.last_stats_time is None:
-            info(f"Warning: {self.name} hasn't been started properly for health monitoring.\n")
+            self.cmd("echo Firewall not started correctly")
             return {}
         current_time = time.time()
         elapsed_time = current_time - self.last_stats_time
@@ -166,7 +181,6 @@ class HealthMonitoringRouter(Node):
                 avg_thr_mbps = avg_thr_bps / 1e6
                 rx_util = (rx_byte_rate * 8 / link_capacity_bps) * 100
                 tx_util = (tx_byte_rate * 8 / link_capacity_bps) * 100
-                # Calculate buffer occupancy for the interface
                 buffer_occ = measure_buffer_occupancy(self, intf)
                 health_data[intf] = {
                     'rx_packet_rate': rx_packet_rate,
@@ -185,103 +199,8 @@ class HealthMonitoringRouter(Node):
         self.initial_stats = current_stats
         self.last_stats_time = current_time
 
-        # Add overall system health parameters
+        # Add firewall-specific and overall system health parameters.
+        health_data['firewall_rules'] = self._get_firewall_rule_stats()
         health_data['cpu_usage_percent'] = measure_cpu_utilization(self, 1)
         health_data['memory_usage_percent'] = measure_memory_usage(self)
         return health_data
-
-    def get_routing_information(self):
-        """
-        Retrieve routing table information using the 'ip route' command.
-        Removes ANSI color codes from the output and parses each line into
-        a dictionary with keys: destination, gateway, device, protocol, scope, and src.
-        Returns a dictionary containing a list of routing entries and the raw output.
-        """
-        import re
-        # Regex pattern to remove ANSI escape sequences
-        ansi_escape = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
-        
-        routing_info = {}
-        output = self.cmd("ip route")
-        # Clean the output by removing ANSI codes
-        output_clean = ansi_escape.sub('', output)
-        if not output_clean:
-            routing_info["error"] = "No routing information available"
-            return routing_info
-
-        routing_table = []
-        for line in output_clean.splitlines():
-            line = line.strip()
-            # Remove surrounding square brackets if present
-            if line.startswith('[') and line.endswith(']'):
-                line = line[1:-1].strip()
-            tokens = line.split()
-            entry = {}
-            if tokens:
-                entry["destination"] = tokens[0]
-            # Initialize defaults for optional values
-            entry["gateway"] = "N/A"
-            entry["device"] = "N/A"
-            entry["protocol"] = "N/A"
-            entry["scope"] = "N/A"
-            entry["src"] = "N/A"
-            # Process tokens looking for keywords and their following values
-            i = 0
-            while i < len(tokens):
-                token = tokens[i]
-                if token == "via" and i+1 < len(tokens):
-                    entry["gateway"] = tokens[i+1]
-                    i += 2
-                    continue
-                elif token == "dev" and i+1 < len(tokens):
-                    entry["device"] = tokens[i+1]
-                    i += 2
-                    continue
-                elif token == "proto" and i+1 < len(tokens):
-                    entry["protocol"] = tokens[i+1]
-                    i += 2
-                    continue
-                elif token == "scope" and i+1 < len(tokens):
-                    entry["scope"] = tokens[i+1]
-                    i += 2
-                    continue
-                elif token == "src" and i+1 < len(tokens):
-                    entry["src"] = tokens[i+1]
-                    i += 2
-                    continue
-                else:
-                    i += 1
-            entry["raw"] = line
-            routing_table.append(entry)
-        routing_info["routing_table"] = routing_table
-        routing_info["raw_output"] = output_clean
-
-        ospf_output = self.router.cmd('vtysh -c "show ip ospf neighbor"')
-        ospf_neighbors = 0
-        ospf_state = "Down"
-        for line in ospf_output.strip().splitlines():
-            if "Full" in line or "2-Way" in line:
-                ospf_neighbors += 1
-                ospf_state = "Full"
-        routing_info["Ospf Neighbors"] = ospf_neighbors
-        routing_info["Ospf State"] = ospf_state
-
-   
-        bgp_output = self.router.cmd('vtysh -c "show ip bgp summary"')
-        bgp_peer = "unknown"
-        bgp_state = "Idle"
-        learned_routes = 0
-        for line in bgp_output.strip().splitlines():
-            if line.startswith("Neighbor") or line.strip() == "":
-                continue
-            parts = line.split()
-            if len(parts) >= 9 and parts[0].count('.') == 3:
-                bgp_peer = parts[0]
-                try:
-                    learned_routes = int(parts[8])
-                    bgp_state = "Established"
-                except ValueError:
-                    bgp_state = parts[8]
-
-        routing_info["BGP Data"] = f"BGP Peer {bgp_peer}: {bgp_state}, Learned Routes: {learned_routes}"
-        return routing_info

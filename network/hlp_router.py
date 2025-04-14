@@ -45,6 +45,32 @@ def build_payload(is_switch, mac, interface_stats, timestamp):
     full_payload = "\n".join(header_lines + interface_lines + [footer])
     return full_payload
 
+def build_router_payload(mac, routing_info, timestamp):
+    header_lines = []
+    header_lines.append("ROUTER PACKET STARTED")
+    header_lines.append(f"MAC: {mac}")
+    num_routes = len(routing_info.get("routing_table", []))
+    header_lines.append(f"Number of Routes: {num_routes}")
+    header_lines.append("Timestamp: " + timestamp.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3])
+    
+    route_lines = []
+    for entry in routing_info.get("routing_table", []):
+        destination = entry.get("destination", "N/A")
+        gateway = entry.get("gateway", "N/A")
+        device = entry.get("device", "N/A")
+        protocol = entry.get("protocol", "N/A")
+        scope = entry.get("scope", "N/A")
+        src = entry.get("src", "N/A")
+        route_lines.append(
+            f"Route: Dest={destination}, Gateway={gateway}, Dev={device}, Proto={protocol}, Scope={scope}, Src={src}"
+        )
+        route_lines.append(
+            f"OSPF Neighbors: {routing_info["Ospf Neighbors"]}, OSPF Status: {routing_info["Ospf State"]}, BGP Data: {routing_info["BGP Data"]}"
+        )
+        
+    footer = "ROUTER PACKET ENDED"
+    full_payload = "\n".join(header_lines + route_lines + [footer])
+    return full_payload
 
 # --- Enhanced Router Class Using Health Parameters ---
 class EnhancedRouter:
@@ -62,9 +88,7 @@ class EnhancedRouter:
         """
         # Start the router
         self.router.start()
-        # Start health monitoring
-        self.router.start_health_monitoring()
-
+    
     def get_interface_stats(self):
         """
         Retrieve real-time interface statistics by calling the router's get_health_parameters().
@@ -117,4 +141,29 @@ class EnhancedRouter:
             f"sendp(pkt, iface='{iface}')"
             '"'
         )
+        self.router.cmd(cmd)
+
+    def send_routing_parameters(self, cc):
+        """
+        Retrieve routing information from the router, build a payload containing the routing details,
+        and send it as a UDP packet using Scapy encapsulated in an Ethernet frame.
+        """
+        now = datetime.datetime.utcnow()
+        # Use the updated get_routing_information function from HealthMonitoringRouter
+        routing_info = self.router.get_routing_information()
+        payload_str = build_router_payload(mac=self.router.MAC(), routing_info=routing_info, timestamp=now)
+        payload_bytes = payload_str.encode('ascii')
+        
+        iface = self.router.intfNames()[0]
+        src_mac = self.router.MAC()
+        dst_mac = cc.MAC()
+        
+        cmd = (
+            'python3 -c "'
+            "from scapy.all import Ether, UDP, Raw, sendp; "
+            f"pkt = Ether(src='{src_mac}', dst='{dst_mac}')/UDP()/Raw(load={payload_bytes}); "
+            f"sendp(pkt, iface='{iface}')"
+            '"'
+        )
+        print("Payload: ", payload_bytes)
         self.router.cmd(cmd)
