@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block title %}About - Network Telemetry Framework{% endblock %}
+
+{% block content %}
+<div class="page-header about-header">
+    <div class="header-content">
+        <h1>About Our Project</h1>
+        <div class="header-decoration"></div>
+    </div>
+</div>
+
+<div class="container">
+    <section class="overview-section">
+        <h2 class="section-title">Network Telemetry Framework</h2>
+        <div class="overview-content">
+            <div class="overview-text">
+                <p>Our network telemetry framework provides real-time insights into network performance, health, and status across three key areas of the campus.</p>
+                <p>Monitor critical metrics like bandwidth usage, packet loss, latency, and routing information from various network devices including routers, switches, and firewalls.</p>
+                <ul class="feature-list">
+                    <li><i class="fas fa-chart-line"></i> Real-time data visualization</li>
+                    <li><i class="fas fa-shield-alt"></i> Security threat detection</li>
+                    <li><i class="fas fa-tachometer-alt"></i> Performance monitoring</li>
+                    <li><i class="fas fa-network-wired"></i> Device health tracking</li>
+                </ul>
+            </div>
+            <div class="overview-image">
+                <img src="{{ url_for('static', filename='img/network-bg.svg') }}" alt="Network Diagram">
+            </div>
+        </div>
+    </section>
+
+    <section class="about-details">
+        <div class="section-intro">
+            <h2 class="section-title">Project Details</h2>
+            <p class="section-subtitle">Learn more about our telemetry framework implementation</p>
+        </div>
+        
+        <div class="about-grid">
+            <div class="about-card">
+                <div class="about-icon">
+                    <i class="fas fa-project-diagram"></i>
+                </div>
+                <h3>Project Overview</h3>
+                <p>Our Network Telemetry Framework aims to develop a robust system for real-time monitoring and management of network performance, supporting network operators in gaining insights into their network's health and status.</p>
+            </div>
+            
+            <div class="about-card">
+                <div class="about-icon">
+                    <i class="fas fa-tasks"></i>
+                </div>
+                <h3>Key Features</h3>
+                <p>The framework extracts performance metrics from network devices, transports telemetry data efficiently, and provides interactive visualization for network health status and security threat detection.</p>
+            </div>
+            
+            <div class="about-card">
+                <div class="about-icon">
+                    <i class="fas fa-layer-group"></i>
+                </div>
+                <h3>Architecture</h3>
+                <p>Our system consists of four planes: Management, Control, Forwarding, and External Data Telemetry, working together to ensure comprehensive network monitoring with minimal overhead.</p>
+            </div>
+            
+            <div class="about-card">
+                <div class="about-icon">
+                    <i class="fas fa-tools"></i>
+                </div>
+                <h3>Technologies</h3>
+                <p>We utilize Mininet for network simulation, Apache Kafka for data streaming, Golang for network communication, and Python for data analysis and machine learning.</p>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/about.js') }}"></script>
+{% endblock %}
