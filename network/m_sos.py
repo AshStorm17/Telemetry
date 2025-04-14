@@ -59,7 +59,7 @@ def simpleTest():
 
 
     cc.cmd(f'python3 init_last_seen.py cc1 {s1.MAC()} {h1.MAC()} {h2.MAC()} {"j123"}')
-    dc.cmd(f'python3 dc_sos_server.py')
+
     cc.cmd('touch cc1_tcp_payload.txt')
     cc.cmd('mkdir cc1_tcp_payload')
 
@@ -94,6 +94,7 @@ def simpleTest():
                 print(f"cc1: Sent UDP packet at {time.time()}")
                 # Delete the file
                 cc.cmd('rm cc1.pcap')
+                cc.cmd('rm cc1_tcp_payload/*')
                 # Restart tcpdump
                 cc.cmd('tcpdump -i any -v -w cc1.pcap not icmp6 and not port 5353 and not arp &')
             if ticks == 9:
@@ -116,6 +117,9 @@ def simpleTest():
 
     cc.cmd('killall tcpdump')
     cc.cmd('python3 packet_processor.py cc1.pcap cc1')
+
+    cc.cmd('rm -rf cc1_tcp_payload/')
+    cc.cmd('rm cc1_tcp_payload.txt')
 
     h2.cmd('killall iperf')
 
