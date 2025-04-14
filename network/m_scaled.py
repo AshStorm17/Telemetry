@@ -327,10 +327,11 @@ def simpleTest():
                 # End tcpdump of cc
                 cc1.cmd('kill %tcpdump')
                 cc2.cmd('kill %tcpdump')
+                cc3.cmd('kill %tcpdump')
                 # Read the file cc1.pcap and send a "Hello" message to the dc from cc
                 cc1.cmd('python3 packet_processor.py cc1.pcap cc1')
                 cc2.cmd('python3 packet_processor.py cc2.pcap cc2')
-                cc2.cmd('python3 packet_processor.py cc3.pcap cc3')
+                cc3.cmd('python3 packet_processor.py cc3.pcap cc3')
                 # Send the data to the dc
                 cc1.cmd('cat cc1_payload.txt | nc -u -w 1 {} 12345'.format(dc.IP())) # send data as UDP
                 print(f"cc1: Sent UDP packet at {time.time()}")
@@ -360,20 +361,20 @@ def simpleTest():
                 # Begin the tcpdump of dc
                 dc.cmd('tcpdump -i any udp port 12345 -w capture.pcap &')
 
-            # enhanced_switch11.send_health_parameters(cc1)
-            # enhanced_switch12.send_health_parameters(cc1)
+            enhanced_switch11.send_health_parameters(cc1)
+            enhanced_switch12.send_health_parameters(cc1)
             enhanced_switch21.send_health_parameters(cc2)
             enhanced_switch22.send_health_parameters(cc2)
-            # enhanced_switch31.send_health_parameters(cc3)
-            # enhanced_switch32.send_health_parameters(cc3)
+            enhanced_switch31.send_health_parameters(cc3)
+            enhanced_switch32.send_health_parameters(cc3)
 
-            # enhanced_router1.send_health_parameters(cc1)
+            enhanced_router1.send_health_parameters(cc1)
             enhanced_router2.send_health_parameters(cc2)
-            # enhanced_router3.send_health_parameters(cc3)
+            enhanced_router3.send_health_parameters(cc3)
 
-            # enhanced_router1.send_routing_parameters(cc1)
+            enhanced_router1.send_routing_parameters(cc1)
             enhanced_router2.send_routing_parameters(cc2)
-            # enhanced_router3.send_routing_parameters(cc3)
+            enhanced_router3.send_routing_parameters(cc3)
 
 
         except KeyboardInterrupt:
