@@ -309,7 +309,7 @@ def craft_to_cc2dc_protocol_payload(swstats, CC_Name):
     # We will put this into the TCP Payload
 
     # Create the CC2DC packet payload
-    timenow = datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
+    timenow = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
     tcppayload = "CC2DC PACKET STARTED\n"
     tcppayload += f"{CC_Name}\n"
     tcppayload += f"{len(swstats)}\n"
@@ -440,7 +440,7 @@ def craft_router_to_cc2dc_protocol_payload(routerstats, CC_Name):
         Checksum: <16-bit checksum>
         CC2DC ROUTER PACKET ENDED
     """
-    timenow = datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
+    timenow = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
     payload = "CC2DC ROUTER PACKET STARTED\n"
     payload += f"{CC_Name}\n"
     payload += f"{len(routerstats)}\n"
