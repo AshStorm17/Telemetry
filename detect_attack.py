@@ -1,5 +1,7 @@
 import argparse
 import pandas as pd
+import csv
+import os
 import faiss
 from utils.packet_parser import parse_csv
 import pickle
@@ -65,23 +67,31 @@ def main():
 
     distances, indices = index.search(query_vectors, 3)
 
-    f = open("attack_log.txt", "w")
-    f.write(f"Number of queries: {num_queries}")
-    for i in range(num_queries):
-        #print(f"{cc_ids[i]}:")
-        attack = True
-        attack_type = ""
-        for rank, (neighbor_index, distance) in enumerate(zip(indices[i], distances[i])):
-            if vals[neighbor_index] == "nil":
-                attack = False
+    # Check if the file exists to determine whether to write the header
+    file_exists = os.path.isfile("attack_log.csv")
+
+    # Open a CSV file for writing
+    with open("attack_log.csv", "w", newline="") as csvfile:
+        csv_writer = csv.writer(csvfile)
+        # Write the header row
+        if not file_exists:
+            csv_writer.writerow(["CC_Name", "Attack_Detected", "Attack_Type"])
+
+        for i in range(num_queries):
+            #print(f"{cc_ids[i]}:")
+            attack = True
+            attack_type = ""
+            for rank, (neighbor_index, distance) in enumerate(zip(indices[i], distances[i])):
+                if vals[neighbor_index] == "nil":
+                    attack = False
+                else:
+                    attack_type = vals[neighbor_index]
+                #print(f"  Neighbor {rank+1}: Index = {neighbor_index}, Distance = {distance:.4f}, Type = {vals[neighbor_index]}")
+            
+            if attack:
+               csv_writer.writerow([cc_ids[i].upper(), "Yes", attack_type.upper()])
             else:
-                attack_type = vals[neighbor_index]
-            #print(f"  Neighbor {rank+1}: Index = {neighbor_index}, Distance = {distance:.4f}, Type = {vals[neighbor_index]}")
-        if attack:
-            f.write(f"ATTACK DETECTED AT {cc_ids[i].upper()}. POSSIBLY {attack_type.upper()} ATTACK")
-        else:
-            f.write(f"NO ATTACK DETECTED AT {cc_ids[i].upper()}")
-    f.close()
+                csv_writer.writerow([cc_ids[i].upper(), "No", "None"])
 
 if __name__ == '__main__':
     main()
