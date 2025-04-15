@@ -24,10 +24,10 @@ def build_firewall_health_payload(mac, health_data, timestamp):
       Checksum: <checksum>
     """
     header_lines = []
-    header_lines.append("FIREWALL PACKET STARTED")
+    header_lines.append("PACKET STARTED")
     header_lines.append(f"MAC: {mac}")
+    header_lines.append("Number of Interfaces: " + str(len(health_data.items())-3))
     header_lines.append("Timestamp: " + timestamp.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + " GMT")
-    
     interface_lines = []
     for intf, data in health_data.items():
         # Skip overall metrics keys:
@@ -51,7 +51,7 @@ def build_firewall_health_payload(mac, health_data, timestamp):
     overall_lines.append(f"Memory Usage: {health_data.get('memory_usage_percent', 'N/A')}")
     overall_lines.append(f"Aggregated Firewall Rule Stats: {health_data.get('firewall_rule_stats', 'N/A')}")
     
-    footer = "FIREWALL PACKET ENDED"
+    footer = "PACKET ENDED"
     payload_without_checksum = "\n".join(header_lines + interface_lines + overall_lines + [footer])
     checksum_val = sum(ord(ch) for ch in payload_without_checksum) % 65536
     full_payload = payload_without_checksum + "\n" + f"Checksum: {checksum_val}"
