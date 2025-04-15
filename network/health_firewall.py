@@ -132,6 +132,9 @@ class HealthMonitoringFirewall(Node):
             }
         return stats
 
+    def get_firewall_rules(self):
+        pass
+
     def _get_firewall_rule_stats(self):
         """
         Retrieve firewall-specific statistics using iptables.

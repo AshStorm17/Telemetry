@@ -69,6 +69,9 @@ class EnhancedFirewall:
         self.firewall = firewall  # An instance of HealthMonitoringFirewall
         self.parameters = parameters
 
+    def start(self):
+        self.firewall.start()
+
     def get_health_data(self):
         """
         Retrieve real-time health metrics by calling the firewall's get_health_parameters.
