@@ -58,7 +58,7 @@ def simpleTest():
     print("s1h: ", s1h.IP())
 
 
-    cc.cmd(f'python3 init_last_seen.py cc1 {s1.MAC()} {h1.MAC()} {h2.MAC()} {"j123"}')
+    cc.cmd(f'python3 init_last_seen.py cc1 {"46:eb:19:fd:51:d9"}')
 
     cc.cmd('touch cc1_tcp_payload.txt')
     cc.cmd('mkdir cc1_tcp_payload')
@@ -88,8 +88,12 @@ def simpleTest():
                 cc.cmd('python3 check_last_seen.py cc1.pcap cc1')
                 cc.cmd('python3 send_sos_packets.py cc1')
                 for sos_packet in os.listdir("cc1_tcp_payload/"):
-                    cc.cmd(f'cat cc1_tcp_payload/{sos_packet}.txt | nc -t -w 1 {dc.IP()} 23456')
-                    cc.cmd(f'rm cc1_tcp_payload/{sos_packet}.txt')
+                    print(f"cc1: Sending SOS TCP packet {sos_packet} to dc")
+                    cc.cmd(f'cat cc1_tcp_payload/{sos_packet}.txt | nc -u -w 1 {dc.IP()} 23456')
+                cc.cmd(f'sudo rm -r cc1_tcp_payload')
+                cc.cmd(f'sudo rm cc1_tcp_payload.txt')
+                cc.cmd(f'sudo touch cc1_tcp_payload.txt')
+                cc.cmd(f'sudo mkdir cc1_tcp_payload')
 
                 print(f"cc1: Sent UDP packet at {time.time()}")
                 # Delete the file
