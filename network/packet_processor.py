@@ -1110,10 +1110,15 @@ if __name__ == "__main__":
     tcp_payload_sw = craft_to_cc2dc_switch_protocol_payload(swstats, CC_Name)
     tcp_payload_rt = craft_to_cc2dc_router_protocol_payload(rtstats, CC_Name)
     tcp_payload_rtr = craft_to_cc2dc_router_rules_protocol_payload(rtrstats, CC_Name)
+    tcp_payload_fw = craft_to_cc2dc_firewall_protocol_payload(fwstats, CC_Name)
+    tcp_payload_fwr = craft_to_cc2dc_firewall_rules_protocol_payload(fwrstats, CC_Name)
+
     # Save to a file cc1_payload.txt
     with open(f"{CC_Name.lower()}_payload.txt", "w") as f:
         f.write(tcp_payload_sw)
         f.write(tcp_payload_rt)
         f.write(tcp_payload_rtr)
-
+        f.write(tcp_payload_fw)
+        f.write(tcp_payload_fwr)
+        
     print(f"Payload saved to {CC_Name.lower()}_payload.txt")
