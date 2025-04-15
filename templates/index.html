@@ -16,16 +16,6 @@
     <div class="hero-particles"></div>
 </section>
 
-<section class="team-video">
-    <h2 class="section-title">Our Team</h2>
-    <div class="video-container">
-        <video controls autoplay muted loop>
-            <source src="{{ url_for('static', filename='team_video.mp4') }}" type="video/mp4">
-            Your browser does not support the video tag.
-        </video>
-    </div>
-</section>
-
 <section class="cluster-sections">
     <h2 class="section-title">Cluster Centers</h2>
     <div class="clusters">
@@ -53,6 +43,16 @@
             <p>Housing Area</p>
             <span class="view-details">View Details <i class="fas fa-arrow-right"></i></span>
         </a>
+    </div>
+</section>
+
+<section class="team-video">
+    <h2 class="section-title">Our Team</h2>
+    <div class="video-container">
+        <video controls autoplay muted loop>
+            <source src="{{ url_for('static', filename='team_video.mp4') }}" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
     </div>
 </section>
 {% endblock %}
