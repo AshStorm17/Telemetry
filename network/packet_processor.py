@@ -294,17 +294,16 @@ def find_router_packets_scapy(pcap_file):
                         mac = mac_line.split(": ")[1]
                         print(f"MAC: {mac}")
 
-                        # Extract the number of ports
+                        # Extract the number of interfaces
                         num_intf_line = payload_lines[3]
                         num_intf = int(num_intf_line.split(": ")[1])
-                        print(f"Number of Ports: {num_intf}")
+                        print(f"Number of Interfaces: {num_intf}")
 
                         # Extract the timestamp
                         timestamp_line = payload_lines[4]
                         timestamp = timestamp_line.split(": ")[1]
                         print(f"Timestamp: {timestamp}")
 
-                        # Extract the port statistics
                         intf_stats = []
                         for i in range(5, 5 + num_intf):
                             intf_line = payload_lines[i]
@@ -339,13 +338,13 @@ def find_router_packets_scapy(pcap_file):
                             # Perform checksum operation
                             checksum_calc = checksum_calc % 65536
                             if checksum != checksum_calc:
-                                print(f"\n\n\n\n---------------------------------------------------\n\nChecksum mismatch for port {port_id}: {checksum} != {checksum_calc}\n\n")
+                                print(f"\n\n\n\n---------------------------------------------------\n\nChecksum mismatch for interface {intf_id}: {checksum} != {checksum_calc}\n\n")
                                 continue
                             else:
-                                print(f"Checksum match for port {port_id}: {checksum} == {checksum_calc}\n\n+++++++++++++++++++++\n\n\n\n")
+                                print(f"Checksum match for interface {intf_id}: {checksum} == {checksum_calc}\n\n+++++++++++++++++++++\n\n\n\n")
 
 
-                            intf_wise_statistics[port_id] = {
+                            intf_wise_statistics[intf_id] = {
                                 'Rx Packets': rxpkts,
                                 'Rx Bytes': rxbytes,
                                 'Rx Errors': rxerrs,
@@ -357,7 +356,7 @@ def find_router_packets_scapy(pcap_file):
                                 'Throughput (Mbps)': throughput,
                                 'Buffer Occupancy': buffer_occ
                             }
-                            print(f"Interface {intf_id}: {intf_wise_statistics[port_id]}")
+                            print(f"Interface {intf_id}: {intf_wise_statistics[intf_id]}")
 
                         if mac not in router_wise_statistics:
                             router_wise_statistics[mac] = {
@@ -414,7 +413,7 @@ def find_router_packets_scapy(pcap_file):
                         router_wise_statistics[mac]['Oldest Timestamp'] = min(datetime.datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S.%f"), router_wise_statistics[mac]['Oldest Timestamp'])
 
                         # Update the statistics
-                        for port_id, port_stat in router_wise_statistics.items():
+                        for intf_id, intf_stat in intf_wise_statistics.items():
                             router_wise_statistics[mac]['Total Packets'] += intf_stat['Rx Packets'] + intf_stat['Tx Packets']
                             router_wise_statistics[mac]['Total Bytes'] += intf_stat['Rx Bytes'] + intf_stat['Tx Bytes']
                             router_wise_statistics[mac]['Total Errors'] += intf_stat['Rx Errors'] + intf_stat['Tx Errors']
@@ -505,6 +504,239 @@ def find_router_rules_packets_scapy(pcap_file):
     except Exception as e:
         print(f"An error occurred while processing the pcap file: {e}")
         return router_statistics
+
+def find_firewall_packets_scapy(pcap_file):
+    fw_stats = {}
+    try:
+        packets = rdpcap(pcap_file)
+        for packet in packets:
+            if Raw in packet:
+                payload = packet[Raw].load.decode('utf-8', errors='ignore')
+                if "FIREWALL PACKET STARTED" in payload and "FIREWALL PACKET ENDED" in payload:
+                    payload_lines = payload.split("\n")
+
+                    #Print line numbers
+                    for i, line in enumerate(payload_lines):
+                        print(f"{i+1}: {line}")
+
+                    # Extract the MAC address
+                    mac_line = payload_lines[2]
+                    mac = mac_line.split(": ")[1]
+
+                    num_intf_line = payload_lines[3]
+                    num_intf = int(num_intf_line.split(": ")[1])
+
+                    # Extract the timestamp
+                    timestamp_line = payload_lines[4]
+                    timestamp = timestamp_line.split(": ")[1]
+
+                    # Extract the port statistics
+                    intf_stats = []
+                    for i in range(5, 5 + num_intf):
+                        intf_line = payload_lines[i]
+                        intf_stats.append(intf_line)
+                
+                    print("Interface Statistics:")
+                    print(intf_stats)
+                    intf_wise_statistics = {}
+                    for intf_stat in intf_stats:
+                        print(intf_stat)
+                        # Split the port statistics line
+                        intf_stat_parts = intf_stat.split(", ")
+                        intf_id = intf_stat_parts[0].split(" ")[1].split(":")[0]
+                        rxpkts = float(intf_stat_parts[0].split("=")[1])
+                        rxbytes = float(intf_stat_parts[1].split("=")[1])
+                        rxerrs = float(intf_stat_parts[2].split("=")[1])
+                        txpkts = float(intf_stat_parts[3].split("=")[1])
+                        txbytes = float(intf_stat_parts[4].split("=")[1])
+                        txerrs = float(intf_stat_parts[5].split("=")[1])
+                        rxutil = float(intf_stat_parts[6].split("=")[1])
+                        txutil = float(intf_stat_parts[7].split("=")[1])
+                        throughput = float(intf_stat_parts[8].split("=")[1])
+                        buffer_occ = float(intf_stat_parts[9].split("=")[1])
+                        checksum = float(intf_stat_parts[10].split("=")[1])
+                        
+                        checksum_calc = (
+                            rxpkts + rxbytes + rxerrs +
+                            txpkts + txbytes + txerrs +
+                            rxutil + txutil +
+                            throughput + buffer_occ
+                        )
+                        # Perform checksum operation
+                        checksum_calc = checksum_calc % 65536
+                        if checksum != checksum_calc:
+                            print(f"\n\n\n\n---------------------------------------------------\n\nChecksum mismatch for interface {intf_id}: {checksum} != {checksum_calc}\n\n")
+                            continue
+                        else:
+                            print(f"Checksum match for interface {intf_id}: {checksum} == {checksum_calc}\n\n+++++++++++++++++++++\n\n\n\n")
+
+
+                        intf_wise_statistics[intf_id] = {
+                            'Rx Packets': rxpkts,
+                            'Rx Bytes': rxbytes,
+                            'Rx Errors': rxerrs,
+                            'Tx Packets': txpkts,
+                            'Tx Bytes': txbytes,
+                            'Tx Errors': txerrs,
+                            'Rx Utilization': rxutil,
+                            'Tx Utilization': txutil,
+                            'Throughput (Mbps)': throughput,
+                            'Buffer Occupancy': buffer_occ
+                        }
+                        print(f"Interface {intf_id}: {intf_wise_statistics[intf_id]}")
+
+                    if mac not in fw_stats:
+                        fw_stats[mac] = {
+                            'Number of Interfaces': num_intf,
+                            'Latest Timestamp': datetime.datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S.%f"),
+                            'Oldest Timestamp': datetime.datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S.%f"),
+                            'Total Packets': 0,
+                            'Total Bytes': 0,
+                            'Total Errors': 0,
+                            'Total Rx Packets': 0,
+                            'Total Rx Bytes': 0,
+                            'Total Rx Errors': 0,
+                            'Total Tx Packets': 0,
+                            'Total Tx Bytes': 0,
+                            'Total Tx Errors': 0,
+                            'Total Rx Utilization': 0,
+                            'Total Tx Utilization': 0,
+                            'Total Throughput (Mbps)': 0,
+                            'Total Buffer Occupancy': 0,
+                            'Min Rx Packets': float('inf'),
+                            'Max Rx Packets': float('-inf'),
+                            'Min Rx Bytes': float('inf'),
+                            'Max Rx Bytes': float('-inf'),
+                            'Min Rx Errors': float('inf'),
+                            'Max Rx Errors': float('-inf'),
+                            'Min Tx Packets': float('inf'),
+                            'Max Tx Packets': float('-inf'),
+                            'Min Tx Bytes': float('inf'),
+                            'Max Tx Bytes': float('-inf'),
+                            'Min Tx Errors': float('inf'),
+                            'Max Tx Errors': float('-inf'),
+                            'Max Rx Utilization': float('-inf'),
+                            'Min Rx Utilization': float('inf'),
+                            'Max Tx Utilization': float('-inf'),
+                            'Min Tx Utilization': float('inf'),
+                            'Max Throughput (Mbps)': float('-inf'),
+                            'Min Throughput (Mbps)': float('inf'),
+                            'Max Buffer Occupancy': float('-inf'),
+                            'Min Buffer Occupancy': float('inf'),
+                            'Average Rx Packets': 0,
+                            'Average Rx Bytes': 0,
+                            'Average Rx Errors': 0,
+                            'Average Tx Packets': 0,
+                            'Average Tx Bytes': 0,
+                            'Average Tx Errors': 0,
+                            'Average Rx Utilization': 0,
+                            'Average Tx Utilization': 0,
+                            'Average Throughput (Mbps)': 0,
+                            'Average Buffer Occupancy': 0
+                        }
+                    
+                    # Update the timestamps
+                    fw_stats[mac]['Latest Timestamp'] = max(datetime.datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S.%f"), fw_stats[mac]['Latest Timestamp'])
+                    fw_stats[mac]['Oldest Timestamp'] = min(datetime.datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S.%f"), fw_stats[mac]['Oldest Timestamp'])
+
+                    # Update the statistics
+                    for intf_id, intf_stat in intf_wise_statistics.items():
+                        fw_stats[mac]['Total Packets'] += intf_stat['Rx Packets'] + intf_stat['Tx Packets']
+                        fw_stats[mac]['Total Bytes'] += intf_stat['Rx Bytes'] + intf_stat['Tx Bytes']
+                        fw_stats[mac]['Total Errors'] += intf_stat['Rx Errors'] + intf_stat['Tx Errors']
+                        fw_stats[mac]['Total Rx Packets'] += intf_stat['Rx Packets']
+                        fw_stats[mac]['Total Rx Bytes'] += intf_stat['Rx Bytes']
+                        fw_stats[mac]['Total Rx Errors'] += intf_stat['Rx Errors']
+                        fw_stats[mac]['Total Tx Packets'] += intf_stat['Tx Packets']
+                        fw_stats[mac]['Total Tx Bytes'] += intf_stat['Tx Bytes']
+                        fw_stats[mac]['Total Tx Errors'] += intf_stat['Tx Errors']
+                        fw_stats[mac]['Total Rx Utilization'] += intf_stat['Rx Utilization']
+                        fw_stats[mac]['Total Tx Utilization'] += intf_stat['Tx Utilization']
+                        fw_stats[mac]['Total Throughput (Mbps)'] += intf_stat['Throughput (Mbps)']
+                        fw_stats[mac]['Total Buffer Occupancy'] += intf_stat['Buffer Occupancy']
+
+                        fw_stats[mac]['Min Rx Packets'] = min(fw_stats[mac]['Min Rx Packets'], intf_stat['Rx Packets'])
+                        fw_stats[mac]['Max Rx Packets'] = max(fw_stats[mac]['Max Rx Packets'], intf_stat['Rx Packets'])
+                        fw_stats[mac]['Min Rx Bytes'] = min(fw_stats[mac]['Min Rx Bytes'], intf_stat['Rx Bytes'])
+                        fw_stats[mac]['Max Rx Bytes'] = max(fw_stats[mac]['Max Rx Bytes'], intf_stat['Rx Bytes'])
+                        fw_stats[mac]['Min Rx Errors'] = min(fw_stats[mac]['Min Rx Errors'], intf_stat['Rx Errors'])
+                        fw_stats[mac]['Max Rx Errors'] = max(fw_stats[mac]['Max Rx Errors'], intf_stat['Rx Errors'])
+                        fw_stats[mac]['Min Tx Packets'] = min(fw_stats[mac]['Min Tx Packets'], intf_stat['Tx Packets'])
+                        fw_stats[mac]['Max Tx Packets'] = max(fw_stats[mac]['Max Tx Packets'], intf_stat['Tx Packets'])
+                        fw_stats[mac]['Min Tx Bytes'] = min(fw_stats[mac]['Min Tx Bytes'], intf_stat['Tx Bytes'])
+                        fw_stats[mac]['Max Tx Bytes'] = max(fw_stats[mac]['Max Tx Bytes'], intf_stat['Tx Bytes'])
+                        fw_stats[mac]['Min Tx Errors'] = min(fw_stats[mac]['Min Tx Errors'], intf_stat['Tx Errors'])
+                        fw_stats[mac]['Max Tx Errors'] = max(fw_stats[mac]['Max Tx Errors'], intf_stat['Tx Errors'])
+                        fw_stats[mac]['Min Rx Utilization'] = min(fw_stats[mac]['Min Rx Utilization'], intf_stat['Rx Utilization'])
+                        fw_stats[mac]['Max Rx Utilization'] = max(fw_stats[mac]['Max Rx Utilization'], intf_stat['Rx Utilization'])
+                        fw_stats[mac]['Min Tx Utilization'] = min(fw_stats[mac]['Min Tx Utilization'], intf_stat['Tx Utilization'])
+                        fw_stats[mac]['Max Tx Utilization'] = max(fw_stats[mac]['Max Tx Utilization'], intf_stat['Tx Utilization'])
+                        fw_stats[mac]['Min Throughput (Mbps)'] = min(fw_stats[mac]['Min Throughput (Mbps)'], intf_stat['Throughput (Mbps)'])
+                        fw_stats[mac]['Max Throughput (Mbps)'] = max(fw_stats[mac]['Max Throughput (Mbps)'], intf_stat['Throughput (Mbps)'])
+                        fw_stats[mac]['Min Buffer Occupancy'] = min(fw_stats[mac]['Min Buffer Occupancy'], intf_stat['Buffer Occupancy'])
+                        fw_stats[mac]['Max Buffer Occupancy'] = max(fw_stats[mac]['Max Buffer Occupancy'], intf_stat['Buffer Occupancy'])
+
+                    fw_stats[mac]['Average Rx Packets'] = fw_stats[mac]['Total Rx Packets'] / num_intf
+                    fw_stats[mac]['Average Rx Bytes'] = fw_stats[mac]['Total Rx Bytes'] / num_intf
+                    fw_stats[mac]['Average Rx Errors'] = fw_stats[mac]['Total Rx Errors'] / num_intf
+                    fw_stats[mac]['Average Tx Packets'] = fw_stats[mac]['Total Tx Packets'] / num_intf
+                    fw_stats[mac]['Average Tx Bytes'] = fw_stats[mac]['Total Tx Bytes'] / num_intf
+                    fw_stats[mac]['Average Tx Errors'] = fw_stats[mac]['Total Tx Errors'] / num_intf
+                    fw_stats[mac]['Average Rx Utilization'] = fw_stats[mac]['Total Rx Utilization'] / num_intf
+                    fw_stats[mac]['Average Tx Utilization'] = fw_stats[mac]['Total Tx Utilization'] / num_intf
+                    fw_stats[mac]['Average Throughput (Mbps)'] = fw_stats[mac]['Total Throughput (Mbps)'] / num_intf
+                    fw_stats[mac]['Average Buffer Occupancy'] = fw_stats[mac]['Total Buffer Occupancy'] / num_intf
+        return fw_stats
+    except Exception as e:
+        print(f"Error processing firewall health packets: {e}")
+        return fw_stats
+
+def find_firewall_rules_packets_scapy(pcap_file):
+    """
+    Reads a pcap file using Scapy and extracts firewall rules telemetry packets.
+    These packets are expected to contain the markers "FIREWALL RULES PACKET STARTED"
+    and "FIREWALL RULES PACKET ENDED".
+    Returns a dictionary keyed by the firewall's MAC address with fields:
+       - "Number of Rule Lines"
+       - "Timestamp"
+       - "Rule Details": a list of the rule lines.
+    """
+    fw_rule_stats = {}
+    try:
+        packets = rdpcap(pcap_file)
+        for packet in packets:
+            if Raw in packet:
+                payload = packet[Raw].load.decode('utf-8', errors='ignore')
+                if "FIREWALL RULES PACKET STARTED" in payload and "FIREWALL RULES PACKET ENDED" in payload:
+                    payload_lines = payload.split("\n")
+
+                    #Print line numbers
+                    for i, line in enumerate(payload_lines):
+                        print(f"{i+1}: {line}")
+
+                    # Extract the MAC address
+                    mac_line = payload_lines[2]
+                    mac = mac_line.split(": ")[1]
+
+                    timestamp_line = next((line for line in payload_lines if line.startswith("Timestamp:")), None)
+                    timestamp = timestamp_line.split("Timestamp:")[1].strip() if timestamp_line else "N/A"
+                    # After the header, we assume a line "Firewall Rules:" exists; then the rule details follow.
+                    try:
+                        idx = payload_lines.index("Firewall Rules:") + 1
+                    except ValueError:
+                        idx = 0
+                    rule_lines = [line.strip() for line in payload_lines[idx:] 
+                                  if line.strip() and "FIREWALL RULES PACKET ENDED" not in line and "Checksum:" not in line]
+                    num_rules = len(rule_lines)
+                    fw_rule_stats[mac] = {
+                        "Number of Rule Lines": num_rules,
+                        "Timestamp": timestamp,
+                        "Rule Details": rule_lines
+                    }
+        return fw_rule_statss
+    except Exception as e:
+        print(f"Error processing firewall rules packets: {e}")
+        return fw_rule_stats
 
 def craft_to_cc2dc_switch_protocol_payload(swstats, CC_Name):
     """
@@ -777,6 +1009,12 @@ def craft_to_cc2dc_router_rules_protocol_payload(routerstats, CC_Name):
     payload += f"Checksum: {checksum}\n"
     payload += "CC2DC ROUTER RULES PACKET ENDED\n\n"
     return payload
+
+def craft_to_cc2dc_firewall_protocol_payload(fwstats, CC_Name):
+    pass
+
+def craft_to_cc2dc_firewall_rules_protocol_payload(fwrulestats, CC_Name):
+    pass
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Extract switch statistics from a pcap file.")
