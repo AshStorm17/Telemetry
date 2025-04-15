@@ -8,6 +8,137 @@
     <script src="{{ url_for('static', filename='js/theme-toggle.js') }}"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        /* Color spectrum background */
+        body {
+            background: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.9) 0%, 
+                rgba(255, 235, 200, 0.8) 25%, 
+                rgba(235, 255, 220, 0.8) 50%, 
+                rgba(255, 220, 220, 0.8) 75%, 
+                rgba(255, 255, 255, 0.9) 100%),
+                radial-gradient(circle at 10% 10%, rgba(255, 100, 100, 0.05), transparent 30%),
+                radial-gradient(circle at 90% 30%, rgba(100, 255, 100, 0.05), transparent 30%),
+                radial-gradient(circle at 50% 80%, rgba(255, 220, 100, 0.05), transparent 30%);
+            background-attachment: fixed;
+            background-size: 200% 200%, 100% 100%, 100% 100%, 100% 100%;
+            animation: gradientMovement 30s ease-in-out infinite;
+        }
+        
+        .dark-theme {
+            background: linear-gradient(135deg, 
+                rgba(30, 30, 30, 0.95) 0%, 
+                rgba(40, 35, 30, 0.9) 25%, 
+                rgba(35, 40, 30, 0.9) 50%, 
+                rgba(40, 30, 30, 0.9) 75%, 
+                rgba(30, 30, 30, 0.95) 100%),
+                radial-gradient(circle at 10% 10%, rgba(255, 80, 80, 0.1), transparent 30%),
+                radial-gradient(circle at 90% 30%, rgba(80, 255, 80, 0.1), transparent 30%),
+                radial-gradient(circle at 50% 80%, rgba(255, 200, 80, 0.1), transparent 30%);
+            background-attachment: fixed;
+            background-size: 200% 200%, 100% 100%, 100% 100%, 100% 100%;
+            animation: gradientMovement 30s ease-in-out infinite;
+        }
+        
+        @keyframes gradientMovement {
+            0% {
+                background-position: 0% 0%, 0% 0%, 0% 0%, 0% 0%;
+            }
+            50% {
+                background-position: 100% 100%, 10% 10%, 90% 30%, 50% 80%;
+            }
+            100% {
+                background-position: 0% 0%, 0% 0%, 0% 0%, 0% 0%;
+            }
+        }
+
+        /* Card background adjustments */
+        .card-bg, .metric-card, .device-card, .collage-item, .stat-card, 
+        .device-panel, .stats-panel, .collage-section, .timestamp-card,
+        .sos-card, .about-card, .router-stat-card, .table-container {
+            background-color: rgba(255, 255, 255, 0.85) !important;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .dark-theme .card-bg, .dark-theme .metric-card, .dark-theme .device-card, 
+        .dark-theme .collage-item, .dark-theme .stat-card, .dark-theme .device-panel, 
+        .dark-theme .stats-panel, .dark-theme .collage-section, .dark-theme .timestamp-card,
+        .dark-theme .sos-card, .dark-theme .about-card, .dark-theme .router-stat-card,
+        .dark-theme .table-container {
+            background-color: rgba(30, 30, 30, 0.8) !important;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 0, 0, 0.2);
+        }
+        
+        /* Back to home button styles */
+        .back-to-home-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--primary-color);
+            color: white;
+            border-radius: var(--border-radius-pill);
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            box-shadow: var(--shadow-medium);
+            transform: translateY(-100px);
+            opacity: 0;
+            transition: transform 0.3s ease, opacity 0.3s ease, background-color 0.3s ease;
+            z-index: 1000;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        
+        .back-to-home-btn.visible {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        
+        .back-to-home-btn:hover {
+            background: var(--primary-dark);
+            box-shadow: var(--shadow-large);
+            transform: translateY(0) scale(1.05);
+        }
+        
+        .back-to-home-btn i {
+            font-size: 1.1rem;
+        }
+        
+        @media (max-width: 768px) {
+            .back-to-home-btn {
+                padding: 8px 12px;
+                font-size: 0.9rem;
+            }
+        }
+
+        /* Enhanced navbar with glass effect */
+        .navbar {
+            background-color: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .dark-theme .navbar {
+            background-color: rgba(30, 30, 30, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+        }
+
+        /* Footer adjustments */
+        footer {
+            background-color: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(5px);
+        }
+        
+        .dark-theme footer {
+            background-color: rgba(30, 30, 30, 0.8);
+        }
+    </style>
     {% block extra_css %}{% endblock %}
 </head>
 <body class="light-theme">
@@ -27,15 +158,19 @@
             </ul>
         </nav>
     </header>
-
+    
+    <!-- Back to home button -->
+    <a href="{{ url_for('index') }}" class="back-to-home-btn" id="backToHomeBtn" title="Back to Home">
+        <i class="fas fa-home"></i> Back To Home
+    </a>
+    
     <main>
         {% block content %}{% endblock %}
     </main>
-
     <footer id="contact">
         <div class="footer-content">
             <div class="team-section">
-                <h3>Our Team</h3>
+                <h3>Our Team Members</h3>
                 <div class="team-members">
                     <div class="team-member">
                         <img src="{{ url_for('static', filename='img/team/member1.jpg') }}" alt="Team Member">
@@ -68,7 +203,40 @@
             </div>
         </div>
     </footer>
-
+    
+    <script>
+        // Back to home button functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const backToHomeBtn = document.getElementById('backToHomeBtn');
+            const navbar = document.querySelector('.navbar');
+            let navbarHeight = navbar.offsetHeight;
+            
+            function handleScroll() {
+                // Get current scroll position
+                const scrollPosition = window.scrollY;
+                
+                // Check if we've scrolled past the navbar
+                if (scrollPosition > navbarHeight + 50) {
+                    backToHomeBtn.classList.add('visible');
+                } else {
+                    backToHomeBtn.classList.remove('visible');
+                }
+            }
+            
+            // Add scroll event listener
+            window.addEventListener('scroll', handleScroll);
+            
+            // Handle window resize to recalculate navbar height
+            window.addEventListener('resize', function() {
+                navbarHeight = navbar.offsetHeight;
+                handleScroll();
+            });
+            
+            // Initial check
+            handleScroll();
+        });
+    </script>
+    
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     {% block extra_js %}{% endblock %}
 </body>
