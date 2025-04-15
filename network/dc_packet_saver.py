@@ -3,47 +3,38 @@ import datetime
 import argparse
 import os
 
-# Read the file capture.pcap
 def read_pcap(file_path):
     packets = rdpcap(file_path)
     return packets
 
 def split_telemetry_sections(content):
-    """
-    Splits the content into switch and router telemetry sections.
-    
-    Assumes the file contains:
-      ... CC2DC PACKET STARTED
-      ... (switch data)
-      ... CC2DC ROUTER PACKET STARTED
-      ... (router data)
-      ... CC2DC PACKET ENDED
-         or CC2DC ROUTER PACKET ENDED somewhere.
-    
-    Returns a tuple: (switch_section, router_section)
-    """
-    # Find the start indices of each section
-    idx_switch_start = content.find("CC2DC PACKET STARTED")
+    idx_switch_start = content.find("CC2DC SWITCH PACKET STARTED")
     idx_router_start = content.find("CC2DC ROUTER PACKET STARTED")
+    idx_router_rules_start = content.find("CC2DC ROUTER RULES PACKET STARTED")
     
     if idx_switch_start == -1:
         idx_switch_start = len(content)
     if idx_router_start == -1:
         idx_router_start = len(content)
+    if idx_router_rules_start == -1:
+        idx_router_rules_start = len(content)
 
-    # The switch section is everything from the switch marker up to the router marker.
-    switch_section = content[idx_switch_start:idx_router_start].strip()
-    
-    # Router section is from its marker up to the end marker for routers.
-    # We attempt to find "CC2DC ROUTER PACKET ENDED". If not found, take to the end.
+    idx_switch_end = content.find("CC2DC SWITCH PACKET ENDED")
     idx_router_end = content.find("CC2DC ROUTER PACKET ENDED")
+    idx_router_rules_end = content.find("CC2DC ROUTER RULES PACKET ENDED")
+
+    if idx_switch_end == -1:
+        idx_switch_end = len(content) - len("CC2DC SWITCH PACKET ENDED")
     if idx_router_end == -1:
-        router_section = content[idx_router_start:].strip()
-    else:
-        # Include the router starting marker up to the router end marker.
-        router_section = content[idx_router_start: idx_router_end + len("CC2DC ROUTER PACKET ENDED")].strip()
+        idx_router_end = len(content) - len("CC2DC ROUTER PACKET ENDED")
+    if idx_router_rules_end == -1:
+        idx_router_rules_end = len(content) - len("CC2DC ROUTER RULES PACKET ENDED")
     
-    return switch_section, router_section
+    switch_section = content[idx_switch_start:idx_switch_end + len("CC2DC SWITCH PACKET ENDED")].strip()
+    router_section = content[idx_router_start:idx_router_end + len("CC2DC ROUTER PACKET ENDED")].strip()
+    router_rules_section = content[idx_router_rules_start:idx_router_rules_end + len("CC2DC ROUTER RULES PACKET ENDED")].strip()
+    
+    return switch_section, router_section, router_rules_section
 
 def append_to_csv(file_path, data):
     with open(file_path, 'a') as f:
@@ -67,35 +58,33 @@ def main():
     parser.add_argument('filename', type=str, help='The name of the pcap file to process')
     args = parser.parse_args()
     
-    # Define markers to remove
     markers = [
-        "CC2DC PACKET STARTED",
-        "CC2DC PACKET ENDED",
+        "CC2DC SWITCH PACKET STARTED",
+        "CC2DC SWITCH PACKET ENDED",
         "CC2DC ROUTER PACKET STARTED",
-        "CC2DC ROUTER PACKET ENDED"
+        "CC2DC ROUTER PACKET ENDED",
+        "CC2DC ROUTER RULES PACKET STARTED",
+        "CC2DC ROUTER RULES PACKET ENDED"
     ]
 
-    # Read the pcap file
     packets = read_pcap(args.filename)
-    # Process each packet
+
     for packet in packets:
-        # The packet is a UDP packet
         if packet.haslayer('UDP'):
-            # Get the payload
             payload = packet['UDP'].payload
-            # Check if the payload is Raw
             if isinstance(payload, Raw):
-                # Decode the payload to string
                 payload_str = payload.load.decode('ascii')
-                # Split the data
-                sw_data, rt_data = split_telemetry_sections(payload_str)
+                sw_data, rt_data, rt_rules_data = split_telemetry_sections(payload_str)
                 sw_data = clean_section_lines(sw_data, markers)
                 rt_data = clean_section_lines(rt_data, markers)
-                # Append to csv file
+                rt_rules_data = clean_section_lines(rt_rules_data, markers)
+
                 append_to_csv('dc_sw_data.csv', sw_data)
                 append_to_csv('dc_rt_data.csv', rt_data)
-                print(f"Data appended to dc_sw_data.csv: {sw_data}")
-                print(f"Data appended to dc_rt_data.csv: {rt_data}")
+                append_to_csv('dc_rt_rules_data.csv', rt_rules_data)
+                print(f"Data appended to dc_sw_data.csv:\n{sw_data}")
+                print(f"Data appended to dc_rt_data.csv:\n{rt_data}")
+                print(f"Data appended to dc_rt_rules_data.csv:\n{rt_rules_data}")
             else:
                 print("Payload is not Raw")
         else:
