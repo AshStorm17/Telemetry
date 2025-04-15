@@ -10,7 +10,7 @@ import datetime
 from scapy.all import Ether, UDP, Raw, sendp
 import socket
 from health_switch import HealthMonitoringSwitch
-from packet_processor import end2end_cc2dc
+# from packet_processor import end2end_cc2dc
 from hlp_switch import *
 import os
 
@@ -103,6 +103,8 @@ def simpleTest():
                 dc.cmd('python3 dc_packet_saver.py capture.pcap')
                 # print PROCESSING
                 print("PROCESSING at dc")
+                dc.cmd('python3 ../detect_attack.py --csv dc_data.csv')
+                print(open('attack_log.txt', 'r').read())
                 # delete the file
                 dc.cmd('rm capture.pcap')
                 # Begin the tcpdump of dc
