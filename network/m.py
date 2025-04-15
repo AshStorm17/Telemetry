@@ -104,7 +104,6 @@ def simpleTest():
                 # print PROCESSING
                 print("PROCESSING at dc")
                 dc.cmd('python3 ../detect_attack.py --csv dc_data.csv')
-                print(open("attack_log.txt").read())
                 print("PROCESSING attack")
                 # delete the file
                 dc.cmd('rm capture.pcap')
