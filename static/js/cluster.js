@@ -22,10 +22,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Setup modal close button
     setupModalClose();
     
-    // Auto-refresh graphs every 5 seconds (changed from 0.5 seconds to reduce load)
-    setInterval(() => {
-        loadAllGraphs();
-    }, 5000);
+    // Update current time
+    updateCurrentTime();
+    setInterval(updateCurrentTime, 1000);
+    
+    // Format all number elements
+    formatAllNumbers();
 });
 
 // Function to load all graphs from HTML files
@@ -69,8 +71,7 @@ function loadAllGraphs() {
                         setTimeout(() => {
                             if (iframe.contentDocument && 
                                 iframe.contentDocument.title && 
-                                (iframe.contentDocument.title.includes("Not Found") || 
-                                 iframe.contentDocument.body.innerHTML.includes("Not Found"))) {
+                                iframe.contentDocument.title.includes("Not Found")) {
                                 handleIframeError(container, iframe);
                             }
                         }, 500);
@@ -81,44 +82,22 @@ function loadAllGraphs() {
                 };
             }
             
-            // Add timestamp to break cache and force reload
-            const timestamp = new Date().getTime();
-            // Fix URL path if needed - ensure it starts with correct path
-            let correctedUrl = url;
-            if (!correctedUrl.startsWith('/')) {
-                correctedUrl = '/' + correctedUrl;
-            }
-            
-            // For development: Try fallback to placeholder if real graphs don't exist
-            if (iframe.src === '' || iframe.src.includes('?')) {
-                // First attempt with the provided URL
-                const separator = correctedUrl.includes('?') ? '&' : '?';
-                iframe.src = `${correctedUrl}${separator}t=${timestamp}`;
-            }
+            // Set iframe source
+            iframe.src = url;
         }
     });
 }
 
 // Handle iframe loading errors
 function handleIframeError(container, iframe) {
-    console.log("Handling iframe error for:", container.id);
-    
     // Create a fallback display
     const fallbackDiv = document.createElement('div');
     fallbackDiv.className = 'iframe-error';
     fallbackDiv.innerHTML = `
         <div class="error-content">
-            <i class="fas fa-chart-line"></i>
+            <i class="fas fa-exclamation-circle"></i>
             <h3>Loading Graph...</h3>
-            <p>Generating visualization. This graph will appear once data is available.</p>
-            <div class="placeholder-chart">
-                <div class="placeholder-line"></div>
-                <div class="placeholder-line"></div>
-                <div class="placeholder-line"></div>
-                <div class="placeholder-line"></div>
-                <div class="placeholder-axis-x"></div>
-                <div class="placeholder-axis-y"></div>
-            </div>
+            <p>The data is being processed. This graph will appear once data is available.</p>
         </div>
     `;
     
@@ -147,9 +126,8 @@ function handleIframeError(container, iframe) {
         
         .error-content i {
             font-size: 2.5rem;
-            color: var(--primary-color);
+            color: var(--text-light);
             margin-bottom: 15px;
-            opacity: 0.7;
         }
         
         .error-content h3 {
@@ -160,61 +138,6 @@ function handleIframeError(container, iframe) {
         .error-content p {
             color: var(--text-light);
             font-size: 0.9rem;
-            margin-bottom: 20px;
-        }
-        
-        .placeholder-chart {
-            height: 100px;
-            width: 100%;
-            position: relative;
-            margin-top: 20px;
-            border-left: 1px dashed var(--border-color);
-            border-bottom: 1px dashed var(--border-color);
-        }
-        
-        .placeholder-line {
-            position: absolute;
-            height: 2px;
-            background: var(--primary-light);
-            opacity: 0.5;
-            width: 80%;
-            bottom: 10%;
-            left: 10%;
-            border-radius: 2px;
-            animation: placeholder-pulse 2s infinite;
-        }
-        
-        .placeholder-line:nth-child(1) {
-            bottom: 30%;
-            width: 70%;
-            left: 15%;
-            animation-delay: 0.3s;
-        }
-        
-        .placeholder-line:nth-child(2) {
-            bottom: 50%;
-            width: 60%;
-            left: 20%;
-            animation-delay: 0.6s;
-        }
-        
-        .placeholder-line:nth-child(3) {
-            bottom: 70%;
-            width: 80%;
-            left: 10%;
-            animation-delay: 0.9s;
-        }
-        
-        .placeholder-line:nth-child(4) {
-            bottom: 85%;
-            width: 60%;
-            left: 25%;
-            animation-delay: 1.2s;
-        }
-        
-        @keyframes placeholder-pulse {
-            0%, 100% { opacity: 0.3; }
-            50% { opacity: 0.6; }
         }
     `;
     
@@ -252,12 +175,6 @@ function setupRefreshButtons() {
                             button.classList.remove('spinning');
                         }, 1000);
                     }
-                } else {
-                    // If iframe doesn't exist (fallback is showing), try reloading
-                    loadAllGraphs();
-                    setTimeout(() => {
-                        button.classList.remove('spinning');
-                    }, 1000);
                 }
             }
         });
@@ -291,21 +208,11 @@ function setupExpandButtons() {
                 
                 // Create iframe in expanded graph container
                 expandedGraph.innerHTML = '';
-                
                 const iframe = document.createElement('iframe');
                 iframe.style.width = '100%';
                 iframe.style.height = '100%';
                 iframe.style.border = 'none';
-                
-                // Add error handling
-                iframe.onerror = () => {
-                    expandedGraph.innerHTML = '<div class="modal-fallback">Graph data is being processed. Please try again later.</div>';
-                };
-                
-                // Add timestamp to break cache and force reload
-                const timestamp = new Date().getTime();
-                const separator = url.includes('?') ? '&' : '?';
-                iframe.src = `${url}${separator}t=${timestamp}`;
+                iframe.src = url;
                 
                 expandedGraph.appendChild(iframe);
                 
@@ -338,6 +245,39 @@ function setupModalClose() {
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && modal.classList.contains('active')) {
             modal.classList.remove('active');
+        }
+    });
+}
+
+// Function to update current timestamp
+function updateCurrentTime() {
+    const currentTimeElement = document.getElementById('current-time');
+    if (currentTimeElement) {
+        const now = new Date();
+        const formattedTime = now.toLocaleString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+        currentTimeElement.textContent = formattedTime;
+    }
+}
+
+// Function to format numbers with commas as thousands separators
+function formatNumber(num) {
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+// Format all number elements
+function formatAllNumbers() {
+    const numberElements = document.querySelectorAll('.stat-value');
+    numberElements.forEach(element => {
+        const value = parseInt(element.textContent);
+        if (!isNaN(value)) {
+            element.textContent = formatNumber(value);
         }
     });
 }
@@ -378,15 +318,116 @@ style.textContent = `
     .refresh-btn.spinning i {
         animation: spin 1s linear infinite;
     }
+
+    /* Table styles for all data tables */
+    .data-section {
+        margin-bottom: 2rem;
+    }
     
-    .modal-fallback {
-        display: flex;
+    .search-container {
+        margin-bottom: 1rem;
+    }
+    
+    .search-input {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        background-color: var(--card-bg);
+        color: var(--text-color);
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .search-input:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+    }
+    
+    .table-container {
+        overflow-x: auto;
+        background-color: var(--card-bg);
+        border-radius: var(--border-radius-large);
+        box-shadow: var(--shadow-medium);
+        border: 1px solid var(--border-color);
+    }
+    
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .data-table th, .data-table td {
+        padding: 1rem;
+        text-align: left;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .data-table th {
+        background-color: rgba(0, 0, 0, 0.02);
+        font-weight: 600;
+        position: relative;
+    }
+    
+    .data-table th::after {
+        content: '';
+        position: absolute;
+        right: 0.5rem;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 0;
+        height: 0;
+    }
+    
+    .data-table th.sort-asc::after {
+        content: '▲';
+        font-size: 0.7rem;
+    }
+    
+    .data-table th.sort-desc::after {
+        content: '▼';
+        font-size: 0.7rem;
+    }
+    
+    .data-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .data-table tbody tr:hover {
+        background-color: rgba(0, 0, 0, 0.02);
+    }
+
+    /* Router button styles */
+    .router-button {
+        display: inline-flex;
         align-items: center;
-        justify-content: center;
-        height: 100%;
-        padding: 20px;
-        text-align: center;
-        color: var(--text-light);
+        gap: var(--spacing-sm);
+        padding: var(--spacing-md) var(--spacing-lg);
+        border-radius: var(--border-radius-large);
+        background: var(--gradient-secondary);
+        color: white;
+        border: none;
+        box-shadow: var(--shadow-medium);
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        margin-right: 1rem;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    
+    .router-button i {
+        font-size: 1.4rem;
+    }
+    
+    .router-button:hover {
+        background: linear-gradient(135deg, var(--secondary-color), var(--secondary-dark));
+        color: white;
+        transform: translateY(-3px) scale(1.05);
+        box-shadow: var(--shadow-large), 0 0 15px rgba(155, 89, 182, 0.5);
+    }
+    
+    .router-button:active {
+        transform: translateY(0) scale(0.98);
     }
 `;
 

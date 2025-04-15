@@ -51,6 +51,7 @@
         <p class="timestamp">Last updated: <span id="current-time">Loading...</span></p>
     </div>
     <div class="cluster-actions">
+        <a href="{{ url_for('router', cluster_id=cluster_id) }}" class="router-button"><i class="fas fa-router"></i> View Router</a>
         <a href="{{ url_for('firewall', cluster_id=cluster_id) }}" class="firewall-button"><i class="fas fa-shield-alt"></i> View Firewall</a>
     </div>
 </div>
@@ -58,44 +59,26 @@
 <div class="dashboard-container">
     <!-- Device Information Panel -->
     <div class="device-panel">
-        <h2 class="panel-title"><i class="fas fa-server"></i> Device Information</h2>
+        <h2 class="panel-title"><i class="fas fa-server"></i> Devices </h2>
         <div class="device-grid">
             <div class="device-card">
                 <div class="device-icon"><i class="fas fa-router"></i></div>
                 <h3>Router</h3>
-                <div class="device-details">
-                    <p><span>MAC:</span> {{ devices.router.mac }}</p>
-                    <p><span>IP:</span> {{ devices.router.ip }}</p>
-                </div>
-                <div class="device-status online">Online</div>
             </div>
             
             <div class="device-card">
                 <div class="device-icon"><i class="fas fa-network-wired"></i></div>
                 <h3>Switch 1</h3>
-                <div class="device-details">
-                    <p><span>MAC:</span> {{ devices.switch1.mac }}</p>
-                </div>
-                <div class="device-status online">Online</div>
             </div>
             
             <div class="device-card">
                 <div class="device-icon"><i class="fas fa-network-wired"></i></div>
                 <h3>Switch 2</h3>
-                <div class="device-details">
-                    <p><span>MAC:</span> {{ devices.switch2.mac }}</p>
-                </div>
-                <div class="device-status online">Online</div>
             </div>
             
             <div class="device-card">
                 <div class="device-icon"><i class="fas fa-shield-alt"></i></div>
                 <h3>Firewall</h3>
-                <div class="device-details">
-                    <p><span>MAC:</span> {{ devices.firewall.mac }}</p>
-                    <p><span>IP:</span> {{ devices.firewall.ip }}</p>
-                </div>
-                <div class="device-status online">Online</div>
             </div>
         </div>
     </div>
@@ -158,7 +141,7 @@
                     <button class="expand-btn" data-target="rx-packets"><i class="fas fa-expand-alt"></i></button>
                 </div>
             </div>
-            <div class="graph-container" id="rx-packets" data-url="{{ graph_files.rx_total_packets }}"></div>
+            <div class="graph-container" id="rx-packets" data-url="{{ graph_files.rx_avg_packets }}"></div>
         </div>
         
         <!-- Section 2: Tx Packets -->
@@ -170,7 +153,7 @@
                     <button class="expand-btn" data-target="tx-packets"><i class="fas fa-expand-alt"></i></button>
                 </div>
             </div>
-            <div class="graph-container" id="tx-packets" data-url="{{ graph_files.tx_total_packets }}"></div>
+            <div class="graph-container" id="tx-packets" data-url="{{ graph_files.tx_avg_packets }}"></div>
         </div>
         
         <!-- Section 3: Rx Bytes -->
@@ -261,6 +244,7 @@
     <!-- Collage View -->
     <div class="collage-section">
         <h2 class="panel-title"><i class="fas fa-th"></i> Metrics Overview</h2>
+        <p class="section-description">Comprehensive view of key network performance indicators</p>
         <div class="collage-grid">
             <div class="collage-item">
                 <h4>Rx Utilization</h4>

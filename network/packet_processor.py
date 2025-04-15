@@ -1099,8 +1099,13 @@ if __name__ == "__main__":
     swstats = find_switch_packets_scapy(pcap_file_path)
     rtstats = find_router_packets_scapy(pcap_file_path)
     rtrstats = find_router_rules_packets_scapy(pcap_file_path)
+    fwstats = find_firewall_packets_scapy(pcap_file_path)
+    fwrstats = find_firewall_rules_packets_scapy(pcap_file_path)
     print(swstats)
     print(rtstats)
+    print(rtrstats)
+    print(fwstats)
+    print(fwrstats)
 
     tcp_payload_sw = craft_to_cc2dc_switch_protocol_payload(swstats, CC_Name)
     tcp_payload_rt = craft_to_cc2dc_router_protocol_payload(rtstats, CC_Name)
