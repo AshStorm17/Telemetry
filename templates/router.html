@@ -1,0 +1,305 @@
+{% extends 'base.html' %}
+
+{% block title %}Router - {{ cluster_name }} - Network Telemetry Framework{% endblock %}
+
+{% block extra_css %}
+<style>
+    .router-header {
+        background: linear-gradient(135deg, var(--secondary-color), var(--secondary-light));
+        padding: 2rem;
+        border-radius: var(--border-radius-large);
+        margin-bottom: 2rem;
+        color: white;
+        box-shadow: var(--shadow-medium);
+        position: relative;
+        overflow: hidden;
+        margin-top: 2rem;
+    }
+    
+    .router-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: 
+            radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.1), transparent 25%),
+            radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.1), transparent 25%);
+        z-index: 0;
+    }
+    
+    .router-header h1 {
+        position: relative;
+        z-index: 1;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .router-header h1 i {
+        font-size: 2rem;
+    }
+    
+    .tab-container {
+        margin-bottom: 2rem;
+    }
+    
+    .tab-nav {
+        display: flex;
+        gap: 0.5rem;
+        border-bottom: 2px solid var(--border-color);
+        margin-bottom: 1.5rem;
+    }
+    
+    .tab-button {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        background: none;
+        font-weight: 600;
+        color: var(--text-light);
+        border-bottom: 3px solid transparent;
+        margin-bottom: -2px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .tab-button.active {
+        color: var(--secondary-color);
+        border-bottom-color: var(--secondary-color);
+    }
+    
+    .tab-button:hover:not(.active) {
+        color: var(--text-color);
+        background-color: rgba(155, 89, 182, 0.05);
+        border-radius: var(--border-radius-small) var(--border-radius-small) 0 0;
+    }
+    
+    .tab-content {
+        display: none;
+    }
+    
+    .tab-content.active {
+        display: block;
+        animation: fadeIn 0.5s ease;
+    }
+    
+    .router-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .router-stat-card {
+        background: linear-gradient(135deg, rgba(155, 89, 182, 0.1), rgba(155, 89, 182, 0.02));
+        border-radius: var(--border-radius-large);
+        padding: 1.5rem;
+        text-align: center;
+        box-shadow: var(--shadow-small);
+        transition: all 0.3s ease;
+        border: 1px solid rgba(155, 89, 182, 0.1);
+    }
+    
+    .router-stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-medium);
+    }
+    
+    .router-stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--secondary-color);
+        margin-bottom: 0.5rem;
+    }
+    
+    .router-stat-label {
+        color: var(--text-light);
+        font-weight: 500;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="router-header">
+        <h1><i class="fas fa-router"></i> Router Management: {{ cluster_name }}</h1>
+    </div>
+    
+    <div class="tab-container">
+        <div class="tab-nav">
+            <button class="tab-button active" data-tab="tab-dc-data">
+                <i class="fas fa-database"></i> DC Data
+            </button>
+            <button class="tab-button" data-tab="tab-router-data">
+                <i class="fas fa-info-circle"></i> Router Data
+            </button>
+            <button class="tab-button" data-tab="tab-router-rules">
+                <i class="fas fa-list-ul"></i> Router Rules
+            </button>
+        </div>
+        
+        <!-- DC Data Tab -->
+        <div class="tab-content active" id="tab-dc-data">
+            <div class="data-section">
+                <div class="table-container">
+                    <table class="data-table" id="dc-data-table">
+                        <thead>
+                            <tr>
+                                {% for key in dc_data[0].keys() %}
+                                <th>{{ key }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in dc_data %}
+                            <tr>
+                                {% for value in row.values() %}
+                                <td>{{ value }}</td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Router Data Tab -->
+        <div class="tab-content" id="tab-router-data">
+            <div class="data-section">
+                <div class="table-container">
+                    <table class="data-table" id="router-data-table">
+                        <thead>
+                            <tr>
+                                {% for key in router_data[0].keys() %}
+                                <th>{{ key }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in router_data %}
+                            <tr>
+                                {% for value in row.values() %}
+                                <td>{{ value }}</td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Router Rules Tab -->
+        <div class="tab-content" id="tab-router-rules">
+            <div class="data-section">
+                <div class="table-container">
+                    <table class="data-table" id="router-rules-table">
+                        <thead>
+                            <tr>
+                                {% for key in router_rules[0].keys() %}
+                                <th>{{ key }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in router_rules %}
+                            <tr>
+                                {% for value in row.values() %}
+                                <td>{{ value }}</td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // Tab functionality
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const tabContents = document.querySelectorAll('.tab-content');
+    
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            // Remove active class from all buttons and contents
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            tabContents.forEach(content => content.classList.remove('active'));
+            
+            // Add active class to clicked button and corresponding content
+            button.classList.add('active');
+            const tabId = button.getAttribute('data-tab');
+            document.getElementById(tabId).classList.add('active');
+        });
+    });
+    
+    // Table sorting functionality
+    document.querySelectorAll('.data-table th').forEach(header => {
+        header.style.cursor = 'pointer';
+        header.addEventListener('click', () => {
+            const table = header.closest('table');
+            const index = Array.from(header.parentNode.children).indexOf(header);
+            const rows = Array.from(table.querySelectorAll('tbody tr'));
+            const ascending = header.getAttribute('data-sort') === 'asc';
+            
+            // Reset all headers
+            table.querySelectorAll('th').forEach(th => {
+                th.removeAttribute('data-sort');
+                th.classList.remove('sort-asc', 'sort-desc');
+            });
+            
+            // Set sort direction
+            header.setAttribute('data-sort', ascending ? 'desc' : 'asc');
+            header.classList.add(ascending ? 'sort-desc' : 'sort-asc');
+            
+            // Sort the rows
+            rows.sort((a, b) => {
+                const aValue = a.children[index].textContent.trim();
+                const bValue = b.children[index].textContent.trim();
+                
+                // Try to sort as numbers if possible
+                if (!isNaN(aValue) && !isNaN(bValue)) {
+                    return ascending ? Number(aValue) - Number(bValue) : Number(bValue) - Number(aValue);
+                }
+                
+                // Otherwise sort as strings
+                return ascending ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
+            });
+            
+            // Re-append rows in the sorted order
+            const tbody = table.querySelector('tbody');
+            rows.forEach(row => {
+                tbody.appendChild(row);
+            });
+        });
+    });
+    
+    // Add hover effect to table rows
+    document.querySelectorAll('.data-table tbody tr').forEach(row => {
+        row.addEventListener('mouseenter', () => {
+            row.style.backgroundColor = 'rgba(155, 89, 182, 0.1)';
+        });
+        
+        row.addEventListener('mouseleave', () => {
+            row.style.backgroundColor = '';
+        });
+    });
+});
+</script>
+{% endblock %}
