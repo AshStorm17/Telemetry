@@ -89,7 +89,9 @@ def simpleTest():
                 cc.cmd('python3 send_sos_packets.py cc1')
                 for sos_packet in os.listdir("cc1_tcp_payload/"):
                     print(f"cc1: Sending SOS TCP packet {sos_packet} to dc")
-                    cc.cmd(f'cat cc1_tcp_payload/{sos_packet}.txt | nc -u -w 1 {dc.IP()} 23456')
+
+                    cc.cmd('cat {} | nc -u -w 1 {} 12345'.format("cc1_tcp_payload/"+sos_packet, dc.IP()))
+
                 cc.cmd(f'sudo rm -r cc1_tcp_payload')
                 cc.cmd(f'sudo rm cc1_tcp_payload.txt')
                 cc.cmd(f'sudo touch cc1_tcp_payload.txt')
