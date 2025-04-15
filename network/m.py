@@ -102,6 +102,7 @@ def simpleTest():
                 # Read the file capture.pcap and send a "Hello" message to the cc from dc
                 dc.cmd('python3 dc_packet_saver.py capture.pcap')
                 # print PROCESSING
+                dc.cmd('python3 ../detect_attack.py --csv dc_data.csv')
                 print("PROCESSING at dc")
                 # delete the file
                 dc.cmd('rm capture.pcap')

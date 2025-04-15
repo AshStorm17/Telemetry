@@ -44,7 +44,7 @@ def parse_csv_to_vectors(csv_file):
     grouped_data[exclude_columns] = numeric_data[exclude_columns].drop_duplicates(subset=['CC_Name']).reset_index(drop=True)
 
     vals = None
-    with open('vectorDB/vals.pkl', 'rb') as file:
+    with open('../vectorDB/vals.pkl', 'rb') as file:
         vals = pickle.load(file)
 
     cc_ids = grouped_data['CC_Name'].values.tolist()
@@ -61,7 +61,7 @@ def main():
     query_vectors, vals, cc_ids = parse_csv_to_vectors(args.csv)
     num_queries, dimension = query_vectors.shape
 
-    index = faiss.read_index('vectorDB/keys.index')
+    index = faiss.read_index('../vectorDB/keys.index')
 
     distances, indices = index.search(query_vectors, 3)
 
@@ -77,6 +77,8 @@ def main():
             #print(f"  Neighbor {rank+1}: Index = {neighbor_index}, Distance = {distance:.4f}, Type = {vals[neighbor_index]}")
         if attack:
             print(f"ATTACK DETECTED AT {cc_ids[i].upper()}. POSSIBLY {attack_type.upper()} ATTACK")
+        else:
+            print(f"NO ATTACK DETECTED AT {cc_ids[i].upper()}")
 
 if __name__ == '__main__':
     main()
