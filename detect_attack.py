@@ -65,6 +65,8 @@ def main():
 
     distances, indices = index.search(query_vectors, 3)
 
+    f = open("attack_log.txt", "w")
+    f.write(f"Number of queries: {num_queries}")
     for i in range(num_queries):
         #print(f"{cc_ids[i]}:")
         attack = True
@@ -75,12 +77,11 @@ def main():
             else:
                 attack_type = vals[neighbor_index]
             #print(f"  Neighbor {rank+1}: Index = {neighbor_index}, Distance = {distance:.4f}, Type = {vals[neighbor_index]}")
-        f = open("attack_log.txt", "w")
         if attack:
             f.write(f"ATTACK DETECTED AT {cc_ids[i].upper()}. POSSIBLY {attack_type.upper()} ATTACK")
         else:
             f.write(f"NO ATTACK DETECTED AT {cc_ids[i].upper()}")
-        f.close()
+    f.close()
 
 if __name__ == '__main__':
     main()

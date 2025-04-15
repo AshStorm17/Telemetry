@@ -14,6 +14,10 @@ from packet_processor import end2end_cc2dc
 from hlp_switch import *
 from hlp_router import *
 from health_router import HealthMonitoringRouter
+from health_firewall import HealthMonitoringFirewall
+from hlp_firewall import *
+from mininet.cli import CLI
+
 
 
 class CustomTopo(Topo):
@@ -31,6 +35,7 @@ class CustomTopo(Topo):
         h18 = self.addHost('h18')
         s12 = self.addSwitch('s12', cls=HealthMonitoringSwitch)
         s12h = self.addHost('s12h')
+        # fw1 = self.addHost("fw1", cls = HealthMonitoringFirewall)
         
         s21 = self.addSwitch('s21', cls=HealthMonitoringSwitch)
         s21h = self.addHost('s21h')
@@ -130,16 +135,17 @@ class CustomTopo(Topo):
         self.addLink(s31, dcs)
         self.addLink(s32, dcs)
 
-        # adding links for routers
+        # # adding links for routers
 
-        self.addLink(r1, s12)
-        self.addLink(s21, r1)
+        # self.addLink(r1, s12)
+        # self.addLink(s21, r1)
 
-        self.addLink(r2, s22)
-        self.addLink(s31, r2)
+        # self.addLink(r2, s22)
+        # self.addLink(s31, r2)
 
-        self.addLink(r3, s32)
-        self.addLink(s11, r3)
+        # self.addLink(r3, s32)
+        # self.addLink(s11, r3)
+
 
 
 
@@ -166,6 +172,7 @@ def simpleTest():
     s12 = net.get('s12')
     s12.capture_initial_stats()
     s12h = net.get('s12h')
+    
 
     s21 = net.get('s21')
     s21.capture_initial_stats()
@@ -179,7 +186,7 @@ def simpleTest():
     h26 = net.get('h26')
     h27 = net.get('h27')
     h28 = net.get('h28')
-    s22 = net.get('s12')
+    s22 = net.get('s22')
     s22.capture_initial_stats()
     s22h = net.get('s22h')
 
@@ -199,38 +206,79 @@ def simpleTest():
     s32.capture_initial_stats()
     s32h = net.get('s32h')
 
-    r1 = net.get('r1')
-    r1.cmd('sysctl -w net.ipv4.ip_forward=1')
-    r1.capture_initial_stats()
+    # r1 = net.get('r1')
+    # r1.cmd('sysctl -w net.ipv4.ip_forward=1')
+    # r1.capture_initial_stats()
 
-    r2 = net.get('r2')
-    r2.cmd('sysctl -w net.ipv4.ip_forward=1')
-    r2.capture_initial_stats()
+    # r2 = net.get('r2')
+    # r2.cmd('sysctl -w net.ipv4.ip_forward=1')
+    # r2.capture_initial_stats()
 
-    r3 = net.get('r3')
-    r3.cmd('sysctl -w net.ipv4.ip_forward=1')
-    r3.capture_initial_stats()
-
+    # r3 = net.get('r3')
+    # r3.cmd('sysctl -w net.ipv4.ip_forward=1')
+    # r3.capture_initial_stats()
     dc = net.get('dc')
 
+    net.pingAll()
+    net.pingAll()
 
-    # net.pingAll()
+     # fw1 = net.get("fw1")
+    # fw1.cmd('sysctl -w net.ipv4.ip_forward=1')
+    # fw1.capture_initial_stats()
+    # # Optional: Add iptables rules to fw1 here if needed
+    # # Example: Allow traffic between h11 and the rest of the network connected via s11
+    # fw1.cmd('iptables -A FORWARD -i fw1-eth0 -o fw1-eth1 -j ACCEPT')
+    # fw1.cmd('iptables -A FORWARD -i fw1-eth1 -o fw1-eth0 -j ACCEPT')
 
-    # # Print IP Addressses
-    # print("IP Addresses:")
-    # print("h11: ", h11.IP())
-    # print("h12: ", h12.IP())
-    # print("cc1: ", cc1.IP())
-    # print("dc: ", dc.IP())
-    # print("s11: ", s11.IP())
-    # print("s11h: ", s11h.IP())
-    # print("h13: ", h13.IP())
-    # print("h14: ", h14.IP())
-    # print("h15: ", h15.IP())
-    # print("h16: ", h16.IP())
-    # print("h17: ", h17.IP())
-    # print("h18: ", h18.IP())
-    # print("s12: ", s12.IP())
+    # h11_ip = net.get('h11').IP()
+    # h12_ip = net.get('h12').IP()
+
+    # info(f"*** Starting tcpdump on fw1 interfaces fw1-eth0 and fw1-eth1 filtering for {h11_ip} <-> {h12_ip}\n")
+    # # Capture on interface connected to h11
+    # fw1.cmd(f'tcpdump -i fw1-eth0 -n -w fw1_eth0_capture.pcap "host {h11_ip} and host {h12_ip}" &')
+    # # Capture on interface connected to s11
+    # fw1.cmd(f'tcpdump -i fw1-eth1 -n -w fw1_eth1_capture.pcap "host {h11_ip} and host {h12_ip}" &')
+
+    # # # Print IP Addressses
+    # print("MAC Addresses:")
+    # # print("h11: ", h11.IP())
+    # # print("h12: ", h12.IP())
+    # print("cc1: ", cc1.MAC())
+    # print("dc: ", dc.MAC())
+    # print("s11: ")
+    # for intf in s11.intfList():
+    #     if intf.name != 'lo':  # Ignore loopback interface
+    #         print(f"Interface: {intf.name}, MAC: {intf.MAC()}")
+    # # print("s11h: ", s11h.IP())
+    # # print("h13: ", h13.IP())
+    # # print("h14: ", h14.IP())
+    # # print("h15: ", h15.IP())
+    # # print("h16: ", h16.IP())
+    # # print("h17: ", h17.IP())
+    # # print("h18: ", h18.IP())
+    # print("s12: ")
+    # for intf in s12.intfList():
+    #     if intf.name != 'lo':  # Ignore loopback interface
+    #         print(f"Interface: {intf.name}, MAC: {intf.MAC()}")
+    # print("s21: ")
+    # for intf in s21.intfList():
+    #     if intf.name != 'lo':  # Ignore loopback interface
+    #         print(f"Interface: {intf.name}, MAC: {intf.MAC()}")
+    # print("s22: ")
+    # for intf in s22.intfList():
+    #     if intf.name != 'lo':  # Ignore loopback interface
+    #         print(f"Interface: {intf.name}, MAC: {intf.MAC()}")
+    # print("s31: ")
+    # for intf in s31.intfList():
+    #     if intf.name != 'lo':  # Ignore loopback interface
+    #         print(f"Interface: {intf.name}, MAC: {intf.MAC()}")
+    # print("s32: ")
+    # for intf in s32.intfList():
+    #     if intf.name != 'lo':  # Ignore loopback interface
+    #         print(f"Interface: {intf.name}, MAC: {intf.MAC()}")
+
+    # print("cc2: ", cc2.MAC())
+    # print("cc3: ", cc3.MAC())
     # print("s12h: ", s12h.IP())
 
     # print("IP Addresses:")
@@ -310,6 +358,9 @@ def simpleTest():
     enhanced_router2.start()
     enhanced_router3.start()
 
+    # enhanced_firewall1 = EnhancedFirewall(fw1,parameters={})
+    # enhanced_firewall1.start()
+
     dc.cmd('tcpdump -i any udp port 12345 -w capture.pcap &')
     cc1.cmd('tcpdump -i any -v -w cc1.pcap not icmp6 and not port 5353 and not arp &')
     cc2.cmd('tcpdump -i any -v -w cc2.pcap not icmp6 and not port 5353 and not arp &')
@@ -317,92 +368,110 @@ def simpleTest():
     time.sleep(10)
     print("Starting Telemetry...")
 
-    ticks = 0    
+    ticks = 0
+    randf_count = 0    
     while True:
         time.sleep(0.5)
         try:
             ticks += 1
+            randf_count += 1
             ticks %= 10
             if ticks%2 == 0:
                 # End tcpdump of cc
-                cc1.cmd('kill %tcpdump')
-                cc2.cmd('kill %tcpdump')
-                cc3.cmd('kill %tcpdump')
+                # cc1.cmd('kill %tcpdump')
+                # cc2.cmd('kill %tcpdump')
+                # cc3.cmd('kill %tcpdump')
                 # Read the file cc1.pcap and send message to the dc from cc
                 cc1.cmd('python3 packet_processor.py cc1.pcap cc1')
-                time.sleep(1)
+                time.sleep(2)
                 cc2.cmd('python3 packet_processor.py cc2.pcap cc2')
-                time.sleep(1)
+                time.sleep(2)
                 cc3.cmd('python3 packet_processor.py cc3.pcap cc3')
-                time.sleep(1)
+                time.sleep(2)
                 # Send the data to the dc
-                cc1.cmd('cat cc1_payload.txt | nc -u -w 1 {} 12345'.format(dc.IP())) # send data as UDP
+                # Send from cc1
+                cc1.sendCmd(f"cat cc1_payload.txt | nc -u -w 1 {dc.IP()} 12345")
                 print(f"cc1: Sent UDP packet at {time.time()}")
-                time.sleep(1)
-                cc2.cmd('cat cc2_payload.txt | nc -u -w 1 {} 12345'.format(dc.IP()))
+                cc1.waitOutput()
+
+                # Wait a bit
+                time.sleep(0.1)
+
+                # Send from cc2
+                cc2.sendCmd(f"cat cc2_payload.txt | nc -u -w 1 {dc.IP()} 12345")
                 print(f"cc2: Sent UDP packet at {time.time()}")
-                time.sleep(1)
-                cc3.cmd('cat cc3_payload.txt | nc -u -w 1 {} 12345'.format(dc.IP()))
+                cc2.waitOutput()
+
+                # Wait a bit
+                time.sleep(0.1)
+
+                # Send from cc3
+                cc3.sendCmd(f"cat cc3_payload.txt | nc -u -w 1 {dc.IP()} 12345")
                 print(f"cc3: Sent UDP packet at {time.time()}")
-                time.sleep(1)
-                # Delete the file
-                cc1.cmd('rm cc1.pcap')
-                cc2.cmd('rm cc2.pcap')
-                cc2.cmd('rm cc3.pcap')
-                # Restart tcpdump
-                cc1.cmd('tcpdump -i any -v -w cc1.pcap not icmp6 and not port 5353 and not arp &')
-                cc2.cmd('tcpdump -i any -v -w cc2.pcap not icmp6 and not port 5353 and not arp &')
-                cc3.cmd('tcpdump -i any -v -w cc3.pcap not icmp6 and not port 5353 and not arp &')
-            if ticks == 9:
+                cc3.waitOutput()
+
+            #     # Delete the file
+            #     cc1.cmd('rm cc1.pcap')
+            #     cc2.cmd('rm cc2.pcap')
+            #     cc2.cmd('rm cc3.pcap')
+            #     # Restart tcpdump
+            #     cc1.cmd('tcpdump -i any -v -w cc1.pcap not icmp6 and not port 5353 and not arp &')
+            #     cc2.cmd('tcpdump -i any -v -w cc2.pcap not icmp6 and not port 5353 and not arp &')
+            #     cc3.cmd('tcpdump -i any -v -w cc3.pcap not icmp6 and not port 5353 and not arp &')
+            # if ticks == 9:
                 # End tcpdump of dc
-                dc.cmd('kill %tcpdump')
+                # dc.cmd('kill %tcpdump')
                 # Read the file capture.pcap and send a "Hello" message to the cc from dc
                 dc.cmd('python3 dc_packet_saver.py capture.pcap')
                 # print PROCESSING
                 print("PROCESSING at dc")
                 # delete the file
-                dc.cmd('rm capture.pcap')
+                # dc.cmd('rm capture.pcap')
                 # Begin the tcpdump of dc
-                dc.cmd('tcpdump -i any udp port 12345 -w capture.pcap &')
+                # dc.cmd('tcpdump -i any udp port 12345 -w capture.pcap &')
 
             enhanced_switch11.send_health_parameters(cc1)
             print(f"Switch 11 sent health parameters to cc1")
-            time.sleep(1)
+            time.sleep(0.1)
             enhanced_switch12.send_health_parameters(cc1)
             print(f"Switch 12 sent health parameters to cc1")
-            time.sleep(1)
+            time.sleep(0.1)
             enhanced_switch21.send_health_parameters(cc2)
             print(f"Switch 21 sent health parameters to cc2")
-            time.sleep(1)
+            time.sleep(0.1)
             enhanced_switch22.send_health_parameters(cc2)
             print(f"Switch 22 sent health parameters to cc2")
-            time.sleep(1)
+            time.sleep(0.1)
             enhanced_switch31.send_health_parameters(cc3)
             print(f"Switch 31 sent health parameters to cc3")
-            time.sleep(1)
+            time.sleep(0.1)
             enhanced_switch32.send_health_parameters(cc3)
             print(f"Switch 32 sent health parameters to cc3")
-            time.sleep(1)
+            time.sleep(0.1)
 
             enhanced_router1.send_health_parameters(cc1)
             print(f"Router 1 sent health parameters to cc1")
-            time.sleep(1)
+            time.sleep(0.1)
             enhanced_router2.send_health_parameters(cc2)
             print(f"Router 2 sent health parameters to cc2")
-            time.sleep(1)
+            time.sleep(0.1)
             enhanced_router3.send_health_parameters(cc3)
             print(f"Router 3 sent health parameters to cc3")
-            time.sleep(1)
+            time.sleep(0.1)
 
             enhanced_router1.send_routing_parameters(cc1)
             print(f"Router 1 sent routing parameters to cc1")
-            time.sleep(1)
+            time.sleep(0.1)
             enhanced_router2.send_routing_parameters(cc2)
             print(f"Router 2 sent routing parameters to cc2")
-            time.sleep(1)
+            time.sleep(0.1)
             enhanced_router3.send_routing_parameters(cc3)
             print(f"Router 3 sent routing parameters to cc3")
-            time.sleep(1)
+            time.sleep(0.1)
+
+            # enhanced_firewall1.send_firewall_parameters(cc1)
+            # print(f"Router 3 sent firewall parameters to cc1")
+            # time.sleep(0.1)
 
 
         except KeyboardInterrupt:
@@ -416,6 +485,7 @@ def simpleTest():
     cc2.cmd('python3 packet_processor.py cc2.pcap cc2')
     cc3.cmd('killall tcpdump')
     cc3.cmd('python3 packet_processor.py cc3.pcap cc2')
+    # fw1.cmd('killall tcpdump')
 
 
     h12.cmd('killall iperf')
