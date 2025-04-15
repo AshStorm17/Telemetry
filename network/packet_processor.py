@@ -733,7 +733,7 @@ def find_firewall_rules_packets_scapy(pcap_file):
                         "Timestamp": timestamp,
                         "Rule Details": rule_lines
                     }
-        return fw_rule_statss
+        return fw_rule_stats
     except Exception as e:
         print(f"Error processing firewall rules packets: {e}")
         return fw_rule_stats
@@ -1011,10 +1011,81 @@ def craft_to_cc2dc_router_rules_protocol_payload(routerstats, CC_Name):
     return payload
 
 def craft_to_cc2dc_firewall_protocol_payload(fwstats, CC_Name):
-    pass
+    timenow = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
+    payload = "CC2DC FIREWALL PACKET STARTED\n"
+    payload += f"{CC_Name}\n"
+    payload += f"{len(fwstats)}\n"
+    payload += f"{timenow} GMT\n"
+    for mac, stats in fwstats.items():
+        payload += f"{mac}\n"
+        payload += f"{stats['Number of Interfaces']}\n"
+        payload += f"{stats['Latest Timestamp']}\n"
+        payload += f"{stats['Oldest Timestamp']}\n"
+        payload += f"{stats['Total Packets']}\n"
+        payload += f"{stats['Total Bytes']}\n"
+        payload += f"{stats['Total Errors']}\n"
+        payload += f"{stats['Total Rx Packets']}\n"
+        payload += f"{stats['Total Rx Bytes']}\n"
+        payload += f"{stats['Total Rx Errors']}\n"
+        payload += f"{stats['Total Tx Packets']}\n"
+        payload += f"{stats['Total Tx Bytes']}\n"
+        payload += f"{stats['Total Tx Errors']}\n"
+        payload += f"{stats['Total Rx Utilization']}\n"
+        payload += f"{stats['Total Tx Utilization']}\n"
+        payload += f"{stats['Total Throughput (Mbps)']}\n"
+        payload += f"{stats['Total Buffer Occupancy']}\n"
+        payload += f"{stats['Min Rx Packets']}\n"
+        payload += f"{stats['Max Rx Packets']}\n"
+        payload += f"{stats['Min Rx Bytes']}\n"
+        payload += f"{stats['Max Rx Bytes']}\n"
+        payload += f"{stats['Min Rx Errors']}\n"
+        payload += f"{stats['Max Rx Errors']}\n"
+        payload += f"{stats['Min Tx Packets']}\n"
+        payload += f"{stats['Max Tx Packets']}\n"
+        payload += f"{stats['Min Tx Bytes']}\n"
+        payload += f"{stats['Max Tx Bytes']}\n"
+        payload += f"{stats['Min Tx Errors']}\n"
+        payload += f"{stats['Max Tx Errors']}\n"
+        payload += f"{stats['Min Rx Utilization']}\n"
+        payload += f"{stats['Max Rx Utilization']}\n"
+        payload += f"{stats['Min Tx Utilization']}\n"
+        payload += f"{stats['Max Tx Utilization']}\n"
+        payload += f"{stats['Min Throughput (Mbps)']}\n"
+        payload += f"{stats['Max Throughput (Mbps)']}\n"
+        payload += f"{stats['Min Buffer Occupancy']}\n"
+        payload += f"{stats['Max Buffer Occupancy']}\n"
+        payload += f"{stats['Average Rx Packets']}\n"
+        payload += f"{stats['Average Rx Bytes']}\n"
+        payload += f"{stats['Average Rx Errors']}\n"
+        payload += f"{stats['Average Tx Packets']}\n"
+        payload += f"{stats['Average Tx Bytes']}\n"
+        payload += f"{stats['Average Tx Errors']}\n"
+        payload += f"{stats['Average Rx Utilization']}\n"
+        payload += f"{stats['Average Tx Utilization']}\n"
+        payload += f"{stats['Average Throughput (Mbps)']}\n"
+        payload += f"{stats['Average Buffer Occupancy']}\n"
+    checksum = sum(ord(c) for c in payload) % 65536
+    payload += f"Checksum: {checksum}\n"
+    payload += "CC2DC FIREWALL PACKET ENDED\n\n"
+    return payload
+
 
 def craft_to_cc2dc_firewall_rules_protocol_payload(fwrulestats, CC_Name):
-    pass
+    timenow = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
+    payload = "CC2DC FIREWALL RULES PACKET STARTED\n"
+    payload += f"{CC_Name}\n"
+    payload += f"{len(fwrulestats)}\n"
+    payload += f"{timenow} GMT\n"
+    for mac, stats in fwrulestats.items():
+        payload += f"{mac}\n"
+        payload += f"{stats.get('Number of Rule Lines', 'N/A')}\n"
+        payload += f"{stats.get('Timestamp', 'N/A')}\n"
+        for rule in stats.get("Rule Details", []):
+            payload += f"{rule}\n"
+    checksum = sum(ord(c) for c in payload) % 65536
+    payload += f"Checksum: {checksum}\n"
+    payload += "CC2DC FIREWALL RULES PACKET ENDED\n\n"
+    return payload
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Extract switch statistics from a pcap file.")
