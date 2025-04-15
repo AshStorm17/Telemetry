@@ -16,3 +16,4 @@ eventlet==0.33.3
 pysnmp==4.4.12
 kaleido==0.2.1
 faiss-cpu==1.10.0
+plotly
