@@ -65,29 +65,28 @@ def main():
 
     index = faiss.read_index('../vectorDB/keys.index')
 
-    distances, indices = index.search(query_vectors, 3)
+    distances, indices = index.search(query_vectors, 5)
 
-    # Check if the file exists to determine whether to write the header
     file_exists = os.path.isfile("attack_log.csv")
-
-    # Open a CSV file for writing
-    with open("attack_log.csv", "w", newline="") as csvfile:
+    with open("attack_log.csv", "a", newline="") as csvfile:
         csv_writer = csv.writer(csvfile)
-        # Write the header row
+        
         if not file_exists:
             csv_writer.writerow(["CC_Name", "Attack_Detected", "Attack_Type"])
 
         for i in range(num_queries):
-            #print(f"{cc_ids[i]}:")
-            attack = True
+            attack = False
             attack_type = ""
+            cnil = 0
             for rank, (neighbor_index, distance) in enumerate(zip(indices[i], distances[i])):
                 if vals[neighbor_index] == "nil":
-                    attack = False
+                    cnil += 1
                 else:
                     attack_type = vals[neighbor_index]
-                #print(f"  Neighbor {rank+1}: Index = {neighbor_index}, Distance = {distance:.4f}, Type = {vals[neighbor_index]}")
             
+            if cnil < 3:
+                attack = True
+
             if attack:
                csv_writer.writerow([cc_ids[i].upper(), "Yes", attack_type.upper()])
             else:
