@@ -75,6 +75,93 @@
         color: var(--text-light);
         font-weight: 500;
     }
+    
+    .tab-container {
+        margin-bottom: 2rem;
+    }
+    
+    .tab-nav {
+        display: flex;
+        gap: 0.5rem;
+        border-bottom: 2px solid var(--border-color);
+        margin-bottom: 1.5rem;
+    }
+    
+    .tab-button {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        background: none;
+        font-weight: 600;
+        color: var(--text-light);
+        border-bottom: 3px solid transparent;
+        margin-bottom: -2px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .tab-button.active {
+        color: var(--accent-color);
+        border-bottom-color: var(--accent-color);
+    }
+    
+    .tab-button:hover:not(.active) {
+        color: var(--text-color);
+        background-color: rgba(255, 107, 107, 0.05);
+        border-radius: var(--border-radius-small) var(--border-radius-small) 0 0;
+    }
+    
+    .tab-content {
+        display: none;
+    }
+    
+    .tab-content.active {
+        display: block;
+        animation: fadeIn 0.5s ease;
+    }
+    
+    .empty-message {
+        text-align: center;
+        padding: 2rem;
+        background-color: rgba(255, 107, 107, 0.05);
+        border-radius: var(--border-radius-large);
+        color: var(--text-light);
+        font-style: italic;
+    }
+    
+    .data-table {
+        width: 100%;
+        overflow-x: auto;
+    }
+    
+    .data-table th, 
+    .data-table td {
+        padding: 8px 12px;
+        text-align: left;
+        border-bottom: 1px solid var(--border-color);
+        white-space: nowrap;
+    }
+    
+    .data-table thead {
+        background-color: rgba(255, 107, 107, 0.1);
+    }
+    
+    .data-table th {
+        font-weight: 600;
+        color: var(--text-color);
+    }
+    
+    .table-container {
+        overflow-x: auto;
+        margin-bottom: 2rem;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
 </style>
 {% endblock %}
 
@@ -84,27 +171,176 @@
         <h1><i class="fas fa-shield-alt"></i> Firewall Management: {{ cluster_name }}</h1>
     </div>
     
-    <div class="data-section">
-        <h2 class="section-title"><i class="fas fa-list"></i> Firewall Data</h2>
-        <div class="table-container">
-            <table class="data-table" id="firewall-data-table">
-                <thead>
-                    <tr>
-                        {% for key in firewall_data[0].keys() %}
-                        <th>{{ key }}</th>
-                        {% endfor %}
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for row in firewall_data %}
-                    <tr>
-                        {% for value in row.values() %}
-                        <td>{{ value }}</td>
-                        {% endfor %}
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <div class="tab-container">
+        <div class="tab-nav">
+            <button class="tab-button active" data-tab="tab-firewall-data">
+                <i class="fas fa-info-circle"></i> Firewall Data
+            </button>
+            <button class="tab-button" data-tab="tab-firewall-rules">
+                <i class="fas fa-list-ul"></i> Firewall Rules
+            </button>
+        </div>
+        
+        <!-- Firewall Data Tab -->
+        <div class="tab-content active" id="tab-firewall-data">
+            <div class="data-section">
+                <h2 class="section-title"><i class="fas fa-info-circle"></i> Firewall Data for {{ cluster_name }}</h2>
+                <div class="table-container">
+                    {% if firewall_data and 'error' not in firewall_data[0] %}
+                    <table class="data-table" id="firewall-data-table">
+                        <thead>
+                            <tr>
+                                <th>Cluster</th>
+                                <th>ID</th>
+                                <th>Timestamp</th>
+                                <th>MAC</th>
+                                <th>Number of Interfaces</th>
+                                <th>Latest Timestamp</th>
+                                <th>Oldest Timestamp</th>
+                                <th>Total Packets</th>
+                                <th>Total Bytes</th>
+                                <th>Total Errors</th>
+                                <th>Total Rx Packets</th>
+                                <th>Total Rx Bytes</th>
+                                <th>Total Rx Errors</th>
+                                <th>Total Tx Packets</th>
+                                <th>Total Tx Bytes</th>
+                                <th>Total Tx Errors</th>
+                                <th>Total Rx Utilization</th>
+                                <th>Total Tx Utilization</th>
+                                <th>Total Throughput (Mbps)</th>
+                                <th>Total Buffer Occupancy</th>
+                                <th>Min Rx Packets</th>
+                                <th>Max Rx Packets</th>
+                                <th>Min Rx Bytes</th>
+                                <th>Max Rx Bytes</th>
+                                <th>Min Rx Errors</th>
+                                <th>Max Rx Errors</th>
+                                <th>Min Tx Packets</th>
+                                <th>Max Tx Packets</th>
+                                <th>Min Tx Bytes</th>
+                                <th>Max Tx Bytes</th>
+                                <th>Min Tx Errors</th>
+                                <th>Max Tx Errors</th>
+                                <th>Min Rx Utilization</th>
+                                <th>Max Rx Utilization</th>
+                                <th>Min Tx Utilization</th>
+                                <th>Max Tx Utilization</th>
+                                <th>Min Throughput (Mbps)</th>
+                                <th>Max Throughput (Mbps)</th>
+                                <th>Min Buffer Occupancy</th>
+                                <th>Max Buffer Occupancy</th>
+                                <th>Average Rx Packets</th>
+                                <th>Average Rx Bytes</th>
+                                <th>Average Rx Errors</th>
+                                <th>Average Tx Packets</th>
+                                <th>Average Tx Bytes</th>
+                                <th>Average Tx Errors</th>
+                                <th>Average Rx Utilization</th>
+                                <th>Average Tx Utilization</th>
+                                <th>Average Throughput (Mbps)</th>
+                                <th>Average Buffer Occupancy</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in firewall_data %}
+                            <tr>
+                                <td>{{ row.get('Cluster', '') }}</td>
+                                <td>{{ row.get('ID', '') }}</td>
+                                <td>{{ row.get('Timestamp', '') }}</td>
+                                <td>{{ row.get('MAC', '') }}</td>
+                                <td>{{ row.get('Number of Interfaces', '') }}</td>
+                                <td>{{ row.get('Latest Timestamp', '') }}</td>
+                                <td>{{ row.get('Oldest Timestamp', '') }}</td>
+                                <td>{{ row.get('Total Packets', '') }}</td>
+                                <td>{{ row.get('Total Bytes', '') }}</td>
+                                <td>{{ row.get('Total Errors', '') }}</td>
+                                <td>{{ row.get('Total Rx Packets', '') }}</td>
+                                <td>{{ row.get('Total Rx Bytes', '') }}</td>
+                                <td>{{ row.get('Total Rx Errors', '') }}</td>
+                                <td>{{ row.get('Total Tx Packets', '') }}</td>
+                                <td>{{ row.get('Total Tx Bytes', '') }}</td>
+                                <td>{{ row.get('Total Tx Errors', '') }}</td>
+                                <td>{{ row.get('Total Rx Utilization', '') }}</td>
+                                <td>{{ row.get('Total Tx Utilization', '') }}</td>
+                                <td>{{ row.get('Total Throughput (Mbps)', '') }}</td>
+                                <td>{{ row.get('Total Buffer Occupancy', '') }}</td>
+                                <td>{{ row.get('Min Rx Packets', '') }}</td>
+                                <td>{{ row.get('Max Rx Packets', '') }}</td>
+                                <td>{{ row.get('Min Rx Bytes', '') }}</td>
+                                <td>{{ row.get('Max Rx Bytes', '') }}</td>
+                                <td>{{ row.get('Min Rx Errors', '') }}</td>
+                                <td>{{ row.get('Max Rx Errors', '') }}</td>
+                                <td>{{ row.get('Min Tx Packets', '') }}</td>
+                                <td>{{ row.get('Max Tx Packets', '') }}</td>
+                                <td>{{ row.get('Min Tx Bytes', '') }}</td>
+                                <td>{{ row.get('Max Tx Bytes', '') }}</td>
+                                <td>{{ row.get('Min Tx Errors', '') }}</td>
+                                <td>{{ row.get('Max Tx Errors', '') }}</td>
+                                <td>{{ row.get('Min Rx Utilization', '') }}</td>
+                                <td>{{ row.get('Max Rx Utilization', '') }}</td>
+                                <td>{{ row.get('Min Tx Utilization', '') }}</td>
+                                <td>{{ row.get('Max Tx Utilization', '') }}</td>
+                                <td>{{ row.get('Min Throughput (Mbps)', '') }}</td>
+                                <td>{{ row.get('Max Throughput (Mbps)', '') }}</td>
+                                <td>{{ row.get('Min Buffer Occupancy', '') }}</td>
+                                <td>{{ row.get('Max Buffer Occupancy', '') }}</td>
+                                <td>{{ row.get('Average Rx Packets', '') }}</td>
+                                <td>{{ row.get('Average Rx Bytes', '') }}</td>
+                                <td>{{ row.get('Average Rx Errors', '') }}</td>
+                                <td>{{ row.get('Average Tx Packets', '') }}</td>
+                                <td>{{ row.get('Average Tx Bytes', '') }}</td>
+                                <td>{{ row.get('Average Tx Errors', '') }}</td>
+                                <td>{{ row.get('Average Rx Utilization', '') }}</td>
+                                <td>{{ row.get('Average Tx Utilization', '') }}</td>
+                                <td>{{ row.get('Average Throughput (Mbps)', '') }}</td>
+                                <td>{{ row.get('Average Buffer Occupancy', '') }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <div class="empty-message">
+                        <p>No firewall data available for {{ cluster_name }}.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Firewall Rules Tab -->
+        <div class="tab-content" id="tab-firewall-rules">
+            <div class="data-section">
+                <h2 class="section-title"><i class="fas fa-list-ul"></i> Firewall Rules for {{ cluster_name }}</h2>
+                <div class="table-container">
+                    {% if firewall_rules and 'error' not in firewall_rules[0] %}
+                    <table class="data-table" id="firewall-rules-table">
+                        <thead>
+                            <tr>
+                                <th>Cluster</th>
+                                <th>ID</th>
+                                <th>Timestamp</th>
+                                <th>Rule</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in firewall_rules %}
+                            <tr>
+                                <td>{{ row.get('Cluster', '') }}</td>
+                                <td>{{ row.get('ID', '') }}</td>
+                                <td>{{ row.get('Timestamp', '') }}</td>
+                                <td>{{ row.get('Rule', '') }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <div class="empty-message">
+                        <p>No firewall rules available for {{ cluster_name }}.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -113,8 +349,22 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    // Animate packet elements
-    animatePackets();
+    // Tab functionality
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const tabContents = document.querySelectorAll('.tab-content');
+    
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            // Remove active class from all buttons and contents
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            tabContents.forEach(content => content.classList.remove('active'));
+            
+            // Add active class to clicked button and corresponding content
+            button.classList.add('active');
+            const tabId = button.getAttribute('data-tab');
+            document.getElementById(tabId).classList.add('active');
+        });
+    });
     
     // Table sorting functionality
     document.querySelectorAll('.data-table th').forEach(header => {
@@ -167,25 +417,11 @@ document.addEventListener('DOMContentLoaded', () => {
             row.style.backgroundColor = '';
         });
     });
-});
-
-// Function to animate packet elements
-function animatePackets() {
-    const packets = document.querySelectorAll('.packet');
     
-    packets.forEach((packet, index) => {
-        // Add animation for each packet
-        packet.animate([
-            { opacity: 0, r: 3 },
-            { opacity: 1, r: 5 },
-            { opacity: 1, r: 5 },
-            { opacity: 0, r: 3 }
-        ], {
-            duration: 3000,
-            delay: index * 700,
-            iterations: Infinity
-        });
-    });
-}
+    // Animate packet elements (from original code)
+    if (typeof animatePackets === 'function') {
+        animatePackets();
+    }
+});
 </script>
 {% endblock %}
