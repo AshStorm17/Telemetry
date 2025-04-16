@@ -20,3 +20,4 @@
 #         "timestamps": timestamps,
 #         "scores": scores.tolist()
 #     }
+# references: Documentations of all the libraries mentioned in the requirements.txt as well as the man pages
