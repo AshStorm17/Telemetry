@@ -389,6 +389,10 @@ def simpleTest():
                 dc.cmd('python3 dc_packet_saver.py capture.pcap')
                 # print PROCESSING
                 print("PROCESSING at dc")
+                # generate the attack log
+                dc.cmd('python3 ../detect_attack.py --csv dc_data.csv')
+                # print PROCESSING
+                print("PROCESSING attack")
                 # delete the file
                 dc.cmd('rm capture.pcap')
                 # Begin the tcpdump of dc
