@@ -14,13 +14,14 @@ def parse_csv(filename):
     with open(filename, 'r') as f:
         reader = csv.reader(f)
         for row in reader:
-            if row[:3] != ["CC2DC", "PACKET", "STARTED"] or row[-3:] != ["CC2DC", "PACKET", "ENDED"]:
-                raise ValueError("Malformed row")
-            CC_Name = row[3]
-            num_macs = int(row[4])
-            timenow = row[5]
+            if not row or len(row) < 3:
+                continue
+            
+            CC_Name = row[0]
+            num_macs = int(row[1])
+            timenow = row[2]
 
-            index = 6
+            index = 3
             swstats = {}
 
             for _ in range(num_macs):
