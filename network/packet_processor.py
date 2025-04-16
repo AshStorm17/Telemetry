@@ -1,6 +1,7 @@
 from scapy.all import rdpcap, Raw
 import datetime
 import argparse
+import os
 
 def find_switch_packets_scapy(pcap_file):
     """
@@ -44,38 +45,39 @@ def find_switch_packets_scapy(pcap_file):
 
                     # Split the payload into lines
                     payload_lines = payload.split("\n")
-                    #Print line numbers
-                    for i, line in enumerate(payload_lines):
-                        print(f"{i+1}: {line}")
+                    # #Print line numbers
+                    # for i, line in enumerate(payload_lines):
+                    #     print(f"{i+1}: {line}")
 
                     if payload_lines[1].split(": ")[1] == "True":
 
                         # Extract the MAC address
                         mac_line = payload_lines[2]
                         mac = mac_line.split(": ")[1]
-                        print(f"MAC: {mac}")
+                        # print(f"MAC: {mac}")
 
                         # Extract the number of ports
                         num_ports_line = payload_lines[3]
                         num_ports = int(num_ports_line.split(": ")[1])
-                        print(f"Number of Ports: {num_ports}")
+                        # print(f"Number of Ports: {num_ports}")
 
                         # Extract the timestamp
                         timestamp_line = payload_lines[4]
                         timestamp = timestamp_line.split(": ")[1]
-                        print(f"Timestamp: {timestamp}")
+                        # print(f"Timestamp: {timestamp}")
 
                         # Extract the port statistics
+                        # print("num_ports ",num_ports)
                         port_stats = []
                         for i in range(5, 5 + num_ports):
                             port_line = payload_lines[i]
                             port_stats.append(port_line)
 
-                        print("Port Statistics:")
-                        print(port_stats)
+                        # print("Port Statistics:")
+                        # print(port_stats)
                         port_wise_statistics = {}
                         for port_stat in port_stats:
-                            print(port_stat)
+                            # print(port_stat)
                             # Split the port statistics line
                             port_stat_parts = port_stat.split(", ")
                             port_id = port_stat_parts[0].split(" ")[1]
@@ -109,11 +111,11 @@ def find_switch_packets_scapy(pcap_file):
                             )
                             # Perform checksum operation
                             checksum_calc = checksum_calc % 65536
-                            if checksum != checksum_calc:
-                                print(f"\n\n\n\n---------------------------------------------------\n\nChecksum mismatch for port {port_id}: {checksum} != {checksum_calc}\n\n")
-                                continue
-                            else:
-                                print(f"Checksum match for port {port_id}: {checksum} == {checksum_calc}\n\n+++++++++++++++++++++\n\n\n\n")
+                            # if checksum != checksum_calc:
+                            #     print(f"\n\n\n\n---------------------------------------------------\n\nChecksum mismatch for port {port_id}: {checksum} != {checksum_calc}\n\n")
+                            #     continue
+                            # else:
+                            #     print(f"Checksum match for port {port_id}: {checksum} == {checksum_calc}\n\n+++++++++++++++++++++\n\n\n\n")
 
 
                             port_wise_statistics[port_id] = {
@@ -128,7 +130,7 @@ def find_switch_packets_scapy(pcap_file):
                                 'Throughput (Mbps)': throughput,
                                 'Buffer Occupancy': buffer_occ
                             }
-                            print(f"Port {port_id}: {port_wise_statistics[port_id]}")
+                            # print(f"Port {port_id}: {port_wise_statistics[port_id]}")
 
                         if mac not in switch_wise_statistics:
                             switch_wise_statistics[mac] = {
@@ -284,36 +286,36 @@ def find_router_packets_scapy(pcap_file):
                     # Split the payload into lines
                     payload_lines = payload.split("\n")
                     #Print line numbers
-                    for i, line in enumerate(payload_lines):
-                        print(f"{i+1}: {line}")
+                    # for i, line in enumerate(payload_lines):
+                    #     print(f"{i+1}: {line}")
 
                     if payload_lines[1].split(": ")[1] == "False":
 
                         # Extract the MAC address
                         mac_line = payload_lines[2]
                         mac = mac_line.split(": ")[1]
-                        print(f"MAC: {mac}")
+                        # print(f"MAC: {mac}")
 
                         # Extract the number of interfaces
                         num_intf_line = payload_lines[3]
                         num_intf = int(num_intf_line.split(": ")[1])
-                        print(f"Number of Interfaces: {num_intf}")
+                        # print(f"Number of Interfaces: {num_intf}")
 
                         # Extract the timestamp
                         timestamp_line = payload_lines[4]
                         timestamp = timestamp_line.split(": ")[1]
-                        print(f"Timestamp: {timestamp}")
+                        # print(f"Timestamp: {timestamp}")
 
                         intf_stats = []
                         for i in range(5, 5 + num_intf):
                             intf_line = payload_lines[i]
                             intf_stats.append(intf_line)
 
-                        print("Interface Statistics:")
-                        print(intf_stats)
+                        # print("Interface Statistics:")
+                        # print(intf_stats)
                         intf_wise_statistics = {}
                         for intf_stat in intf_stats:
-                            print(intf_stat)
+                            # print(intf_stat)
                             # Split the port statistics line
                             intf_stat_parts = intf_stat.split(", ")
                             intf_id = intf_stat_parts[0].split(" ")[1].split(":")[0]
@@ -337,11 +339,11 @@ def find_router_packets_scapy(pcap_file):
                             )
                             # Perform checksum operation
                             checksum_calc = checksum_calc % 65536
-                            if checksum != checksum_calc:
-                                print(f"\n\n\n\n---------------------------------------------------\n\nChecksum mismatch for interface {intf_id}: {checksum} != {checksum_calc}\n\n")
-                                continue
-                            else:
-                                print(f"Checksum match for interface {intf_id}: {checksum} == {checksum_calc}\n\n+++++++++++++++++++++\n\n\n\n")
+                            # if checksum != checksum_calc:
+                            #     print(f"\n\n\n\n---------------------------------------------------\n\nChecksum mismatch for interface {intf_id}: {checksum} != {checksum_calc}\n\n")
+                            #     continue
+                            # else:
+                            #     print(f"Checksum match for interface {intf_id}: {checksum} == {checksum_calc}\n\n+++++++++++++++++++++\n\n\n\n")
 
 
                             intf_wise_statistics[intf_id] = {
@@ -356,7 +358,7 @@ def find_router_packets_scapy(pcap_file):
                                 'Throughput (Mbps)': throughput,
                                 'Buffer Occupancy': buffer_occ
                             }
-                            print(f"Interface {intf_id}: {intf_wise_statistics[intf_id]}")
+                            # print(f"Interface {intf_id}: {intf_wise_statistics[intf_id]}")
 
                         if mac not in router_wise_statistics:
                             router_wise_statistics[mac] = {
@@ -516,8 +518,8 @@ def find_firewall_packets_scapy(pcap_file):
                     payload_lines = payload.split("\n")
 
                     #Print line numbers
-                    for i, line in enumerate(payload_lines):
-                        print(f"{i+1}: {line}")
+                    # for i, line in enumerate(payload_lines):
+                    #     print(f"{i+1}: {line}")
 
                     # Extract the MAC address
                     mac_line = payload_lines[2]
@@ -536,11 +538,11 @@ def find_firewall_packets_scapy(pcap_file):
                         intf_line = payload_lines[i]
                         intf_stats.append(intf_line)
                 
-                    print("Interface Statistics:")
-                    print(intf_stats)
+                    # print("Interface Statistics:")
+                    # print(intf_stats)
                     intf_wise_statistics = {}
                     for intf_stat in intf_stats:
-                        print(intf_stat)
+                        # print(intf_stat)
                         # Split the port statistics line
                         intf_stat_parts = intf_stat.split(", ")
                         intf_id = intf_stat_parts[0].split(" ")[1].split(":")[0]
@@ -564,11 +566,11 @@ def find_firewall_packets_scapy(pcap_file):
                         )
                         # Perform checksum operation
                         checksum_calc = checksum_calc % 65536
-                        if checksum != checksum_calc:
-                            print(f"\n\n\n\n---------------------------------------------------\n\nChecksum mismatch for interface {intf_id}: {checksum} != {checksum_calc}\n\n")
-                            continue
-                        else:
-                            print(f"Checksum match for interface {intf_id}: {checksum} == {checksum_calc}\n\n+++++++++++++++++++++\n\n\n\n")
+                        # if checksum != checksum_calc:
+                        #     print(f"\n\n\n\n---------------------------------------------------\n\nChecksum mismatch for interface {intf_id}: {checksum} != {checksum_calc}\n\n")
+                        #     continue
+                        # else:
+                        #     print(f"Checksum match for interface {intf_id}: {checksum} == {checksum_calc}\n\n+++++++++++++++++++++\n\n\n\n")
 
 
                         intf_wise_statistics[intf_id] = {
@@ -583,7 +585,7 @@ def find_firewall_packets_scapy(pcap_file):
                             'Throughput (Mbps)': throughput,
                             'Buffer Occupancy': buffer_occ
                         }
-                        print(f"Interface {intf_id}: {intf_wise_statistics[intf_id]}")
+                        # print(f"Interface {intf_id}: {intf_wise_statistics[intf_id]}")
 
                     if mac not in fw_stats:
                         fw_stats[mac] = {
@@ -711,8 +713,8 @@ def find_firewall_rules_packets_scapy(pcap_file):
                     payload_lines = payload.split("\n")
 
                     #Print line numbers
-                    for i, line in enumerate(payload_lines):
-                        print(f"{i+1}: {line}")
+                    # for i, line in enumerate(payload_lines):
+                    #     print(f"{i+1}: {line}")
 
                     # Extract the MAC address
                     mac_line = payload_lines[2]
@@ -796,7 +798,7 @@ def craft_to_cc2dc_switch_protocol_payload(swstats, CC_Name):
     # We will put this into the TCP Payload
 
     # Create the CC2DC packet payload
-    timenow = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
+    timenow = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
     tcppayload = "CC2DC SWITCH PACKET STARTED\n"
     tcppayload += f"{CC_Name}\n"
     tcppayload += f"{len(swstats)}\n"
@@ -915,7 +917,7 @@ def craft_to_cc2dc_router_protocol_payload(rtstats, CC_Name):
     # We will put this into the TCP Payload
 
     # Create the CC2DC packet payload
-    timenow = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
+    timenow = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
     tcppayload = "CC2DC ROUTER PACKET STARTED\n"
     tcppayload += f"{CC_Name}\n"
     tcppayload += f"{len(rtstats)}\n"
@@ -993,7 +995,7 @@ def craft_to_cc2dc_router_rules_protocol_payload(routerstats, CC_Name):
         Checksum: <16-bit checksum>
         CC2DC ROUTER PACKET ENDED
     """
-    timenow = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
+    timenow = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
     payload = "CC2DC ROUTER RULES PACKET STARTED\n"
     payload += f"{CC_Name}\n"
     payload += f"{len(routerstats)}\n"
@@ -1011,7 +1013,7 @@ def craft_to_cc2dc_router_rules_protocol_payload(routerstats, CC_Name):
     return payload
 
 def craft_to_cc2dc_firewall_protocol_payload(fwstats, CC_Name):
-    timenow = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
+    timenow = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
     payload = "CC2DC FIREWALL PACKET STARTED\n"
     payload += f"{CC_Name}\n"
     payload += f"{len(fwstats)}\n"
@@ -1071,7 +1073,7 @@ def craft_to_cc2dc_firewall_protocol_payload(fwstats, CC_Name):
 
 
 def craft_to_cc2dc_firewall_rules_protocol_payload(fwrulestats, CC_Name):
-    timenow = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
+    timenow = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
     payload = "CC2DC FIREWALL RULES PACKET STARTED\n"
     payload += f"{CC_Name}\n"
     payload += f"{len(fwrulestats)}\n"
@@ -1101,11 +1103,11 @@ if __name__ == "__main__":
     rtrstats = find_router_rules_packets_scapy(pcap_file_path)
     fwstats = find_firewall_packets_scapy(pcap_file_path)
     fwrstats = find_firewall_rules_packets_scapy(pcap_file_path)
-    print(swstats)
-    print(rtstats)
-    print(rtrstats)
-    print(fwstats)
-    print(fwrstats)
+    # print(swstats)
+    # print(rtstats)
+    # print(rtrstats)
+    # print(fwstats)
+    # print(fwrstats)
 
     tcp_payload_sw = craft_to_cc2dc_switch_protocol_payload(swstats, CC_Name)
     tcp_payload_rt = craft_to_cc2dc_router_protocol_payload(rtstats, CC_Name)
@@ -1114,6 +1116,7 @@ if __name__ == "__main__":
     tcp_payload_fwr = craft_to_cc2dc_firewall_rules_protocol_payload(fwrstats, CC_Name)
 
     # Save to a file cc1_payload.txt
+    # print(f"saving file at path {os.system("pwd")}")
     with open(f"{CC_Name.lower()}_payload.txt", "w") as f:
         f.write(tcp_payload_sw)
         f.write(tcp_payload_rt)
