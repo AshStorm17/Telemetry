@@ -260,13 +260,6 @@ def simpleTest():
     dc.cmd('ip route add 10.0.3.0/24 via 10.0.100.13')
 
     time.sleep(2)
-    CLI(net)
-    # print(cc3.MAC(),"CC3 MAC")
-    # print(fw1.MAC(),"FW1 MAC")
-
-    
-
-
         
 
     h2_cc1.cmd('iperf -s -u -i 1 > iperf_server_output &')
@@ -363,11 +356,11 @@ def simpleTest():
                 cc2.cmd('kill %tcpdump')
                 cc3.cmd('kill %tcpdump')
 
-                cc1.cmd('python3 packet_processor.py cc1.pcap cc1 > cc1.log 2>&1 &')
+                cc1.cmd('python3 packet_processor.py cc1.pcap cc1 &')
                 time.sleep(0.2)
-                cc2.cmd('python3 packet_processor.py cc2.pcap cc2 > cc2.log 2>&1 &')
+                cc2.cmd('python3 packet_processor.py cc2.pcap cc2 &')
                 time.sleep(0.2)
-                cc3.cmd('python3 packet_processor.py cc3.pcap cc3 > cc3.log 2>&1 &')
+                cc3.cmd('python3 packet_processor.py cc3.pcap cc3 &')
                 time.sleep(0.2)
                 # Send the data to the dc
                 cc1.cmd('cat cc1_payload.txt | nc -u -w 1 {} 12345'.format(dc.IP())) # send data as UDP
@@ -436,8 +429,8 @@ def simpleTest():
             print(f"Router 2 sent routing parameters to cc2")
             time.sleep(0.1)
 
-            enhanced_firewall1.send_health_parameters(cc2)
-            print(f"Firewall 1 sent firewall health parameters to cc2")
+            enhanced_firewall1.send_health_parameters(cc3)
+            print(f"Firewall 1 sent firewall health parameters to cc3")
             time.sleep(0.1)
 
             enhanced_firewall1.send_rule_details(cc3)
