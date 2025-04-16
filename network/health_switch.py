@@ -5,7 +5,6 @@ import re
 import statistics
 
 class HealthMonitoringSwitch(OVSKernelSwitch):
-    """Custom switch that captures health parameters."""
     def __init__(self, name, **params):
         super().__init__(name, **params)
         self.last_stats_time = None
@@ -17,12 +16,10 @@ class HealthMonitoringSwitch(OVSKernelSwitch):
     #     self.last_stats_time = time.time()
 
     def capture_initial_stats(self):
-        """Capture initial port statistics for rate calculations."""
         self.initial_stats = self._get_port_stats()
         self.last_stats_time = None
 
     def _get_port_stats(self):
-        """Retrieve current port statistics using ovs-ofctl."""
         stats = {}
         output = self.cmd(f'ovs-ofctl dump-ports {self.name}')
         port_sections = []
@@ -78,10 +75,6 @@ class HealthMonitoringSwitch(OVSKernelSwitch):
         return stats
 
     def get_health_parameters(self, duration=5, link_capacity_bps=10e6):
-        """
-        Calculate per-port rates and error rates over the given duration.
-        Returns a dictionary keyed by port number.
-        """
         if self.last_stats_time is None:
             self.initial_stats = self._get_port_stats()
             self.last_stats_time = time.time()
@@ -134,10 +127,6 @@ class HealthMonitoringSwitch(OVSKernelSwitch):
 
 
 def measure_buffer_occupancy(switch, port):
-    """
-    Attempts to calculate buffer occupancy for a given switch port.
-    This function uses the 'tc -s qdisc' command on the interface corresponding to the port.
-    """
     iface = f"{switch.name}-eth{port}"
     output = switch.cmd(f"tc -s qdisc show dev {iface}")
     match = re.search(r'backlog\s+(\d+)b', output)

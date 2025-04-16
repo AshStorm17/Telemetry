@@ -153,16 +153,12 @@ for region, color in region_colors.items():
                                  facecolor=color, alpha=0.3, linewidth=0.5)
             plt.gca().add_patch(rect)
 
-# Draw the nodes with colors
 nx.draw_networkx_nodes(graph, pos, node_color=colors, node_size=1200)
 
-# Draw the edges
 nx.draw_networkx_edges(graph, pos, width=1, arrowstyle='->', arrowsize=10)
 
-# Draw the labels with adjusted font size
 nx.draw_networkx_labels(graph, pos, labels, font_size=12, font_color='black', verticalalignment='bottom', horizontalalignment='center')
 
-# Set plot title and show
 plt.title("Scaled Topology for Simulation", fontsize=18)
 plt.axis('off')
 plt.tight_layout()

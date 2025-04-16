@@ -51,9 +51,6 @@ class EnhancedSwitch:
         self.parameters = parameters
 
     def get_port_stats(self):
-        """
-        Retrieve real-time port statistics by calling the switch’s get_health_parameters().
-        """
         health_data = self.switch.get_health_parameters(duration=1)
         port_stats = []
         for port, data in health_data.items():
@@ -76,9 +73,6 @@ class EnhancedSwitch:
 
 
     def send_health_parameters(self, cc):
-        """
-        Build the custom readable payload and send it as a UDP packet using Scapy.
-        """
         now = datetime.datetime.now()
         port_stats = self.get_port_stats()
         payload_str = build_payload(is_switch=True, mac=self.host.MAC(), port_stats=port_stats, timestamp=now)

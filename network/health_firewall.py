@@ -5,10 +5,6 @@ import re
 import statistics
 
 def measure_buffer_occupancy(device, interface):
-    """
-    Attempts to calculate buffer occupancy for a given device interface.
-    Uses the 'tc -s qdisc' command on the specified interface.
-    """
     output = device.cmd(f"tc -s qdisc show dev {interface}")
     match = re.search(r'backlog\s+(\d+)b', output)
     if match:
@@ -17,10 +13,6 @@ def measure_buffer_occupancy(device, interface):
         return None
 
 def measure_cpu_utilization(device, duration):
-    """
-    Measures CPU usage over a specified duration by reading /proc/stat.
-    Returns the percentage of non-idle time.
-    """
     stat1 = device.cmd("cat /proc/stat")
     fields = stat1.splitlines()[0].split()
     idle1 = int(fields[4])
@@ -46,10 +38,6 @@ def measure_cpu_utilization(device, duration):
     return cpu_usage_percent
 
 def measure_memory_usage(device):
-    """
-    Measures memory utilization by reading /proc/meminfo.
-    Returns the percentage of memory used.
-    """
     meminfo = device.cmd("cat /proc/meminfo")
     total = None
     available = None
@@ -64,41 +52,19 @@ def measure_memory_usage(device):
     return None
 
 class HealthMonitoringFirewall(Node):
-    """
-    Custom firewall that captures interface, system, and firewall rule metrics.
-    
-    Provides:
-      - get_health_parameters: Returns a dictionary including:
-            * Per-interface data (similar to routers and switches):
-                rx_packets, rx_bytes, tx_packets, tx_bytes, errors, computed rates,
-                utilization, throughput, buffer occupancy.
-            * Overall CPU and memory usage.
-            * Aggregated firewall rule statistics (e.g., total packets processed).
-      - get_firewall_rules: Returns the detailed firewall rule list as a string (from iptables).
-    """
     def __init__(self, name, **params):
         super().__init__(name, **params)
         self.last_stats_time = None
         self.initial_stats = {}
 
     def start(self, *args, **kwargs):
-        """
-        Initialize the firewall node by recording the start time and capturing initial interface statistics.
-        """
         self.capture_initial_stats()
         info(f"{self.name} initialized and ready for firewall health monitoring.\n")
 
     def capture_initial_stats(self):
-        """
-        Capture the initial interface statistics for rate calculations.
-        """
         self.initial_stats = self._get_interface_stats()
 
     def _get_interface_stats(self):
-        """
-        Retrieve interface statistics using the command 'ip -s link show dev <interface>'.
-        Returns a dictionary keyed by the interface names.
-        """
         stats = {}
         for intf in self.intfList():
             output = self.cmd(f"ip -s link show dev {intf}")
@@ -137,18 +103,6 @@ class HealthMonitoringFirewall(Node):
         return stats
 
     def get_health_parameters(self, duration=5, link_capacity_bps=10e6):
-        """
-        Calculate per-interface rates and overall system usage over a given duration.
-        
-        Returns a dictionary comprising:
-          - For each interface:
-              * rx_packet_rate, rx_byte_rate, tx_packet_rate, tx_byte_rate,
-                throughput (mbps), utilization percentages, error rates, and buffer occupancy.
-          - Overall metrics:
-              * cpu_usage_percent, memory_usage_percent.
-          - Aggregated firewall rule statistics (from iptables).
-          - You may add any additional parameters relevant to firewall health here.
-        """
         if self.last_stats_time is None:
             self.initial_stats = self._get_interface_stats()
             self.last_stats_time = time.time()
@@ -199,10 +153,6 @@ class HealthMonitoringFirewall(Node):
         return health_data
 
     def _get_firewall_rule_stats(self):
-        """
-        Retrieve aggregated firewall rule statistics using iptables.
-        Parses the verbose output to sum up packet and byte counts.
-        """
         output = self.cmd("iptables -L -v -n")
         total_packets = 0
         total_bytes = 0
@@ -221,8 +171,4 @@ class HealthMonitoringFirewall(Node):
         }
 
     def get_firewall_rules(self):
-        """
-        Retrieve the detailed firewall rules.
-        Returns the complete iptables output as a string.
-        """
         return self.cmd("iptables -L -v -n")

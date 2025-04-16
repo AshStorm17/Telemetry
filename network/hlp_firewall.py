@@ -82,35 +82,19 @@ def build_firewall_rules_payload(mac, rule_details, timestamp):
 class EnhancedFirewall:
 
     def __init__(self, firewall, parameters):
-        """
-        :param firewall: An instance of HealthMonitoringFirewall.
-        :param parameters: A dictionary of parameters (if any).
-        """
         self.firewall = firewall
         self.parameters = parameters
 
     def start(self):
-        """
-        Start the underlying firewall and initialize telemetry.
-        """
         self.firewall.start()
 
     def get_health_data(self, duration=5):
-        """
-        Retrieve the health parameters from the firewall.
-        """
         return self.firewall.get_health_parameters(duration=duration)
 
     def get_rule_details(self):
-        """
-        Retrieve the detailed firewall rules as a raw string.
-        """
         return self.firewall.get_firewall_rules()
 
     def send_health_parameters(self, dest):
-        """
-        Package the firewall health data into a FIREWALL PACKET and send it to the destination.
-        """
         now = datetime.datetime.now()
         health_data = self.get_health_data(duration=1)
         payload_str = build_firewall_health_payload(self.firewall.MAC(), health_data, now)
