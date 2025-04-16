@@ -85,7 +85,7 @@ class HealthMonitoringFirewall(Node):
         """
         Initialize the firewall node by recording the start time and capturing initial interface statistics.
         """
-        self.last_stats_time = time.time()
+        # self.last_stats_time = time.time()
         self.capture_initial_stats()
         info(f"{self.name} initialized and ready for firewall health monitoring.\n")
 
@@ -152,8 +152,9 @@ class HealthMonitoringFirewall(Node):
           - You may add any additional parameters relevant to firewall health here.
         """
         if self.last_stats_time is None:
-            info(f"Warning: {self.name} hasn't been started properly for health monitoring.\n")
-            return {}
+            self.initial_stats = self._get_interface_stats()
+            self.last_stats_time = time.time()
+            time.sleep(duration)
         current_time = time.time()
         elapsed_time = current_time - self.last_stats_time
         if elapsed_time < duration:
