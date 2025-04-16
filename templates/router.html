@@ -122,6 +122,42 @@
         font-weight: 500;
     }
     
+    .empty-message {
+        text-align: center;
+        padding: 2rem;
+        background-color: rgba(155, 89, 182, 0.05);
+        border-radius: var(--border-radius-large);
+        color: var(--text-light);
+        font-style: italic;
+    }
+    
+    .data-table {
+        width: 100%;
+        overflow-x: auto;
+    }
+    
+    .data-table th, 
+    .data-table td {
+        padding: 8px 12px;
+        text-align: left;
+        border-bottom: 1px solid var(--border-color);
+        white-space: nowrap;
+    }
+    
+    .data-table thead {
+        background-color: rgba(155, 89, 182, 0.1);
+    }
+    
+    .data-table th {
+        font-weight: 600;
+        color: var(--text-color);
+    }
+    
+    .table-container {
+        overflow-x: auto;
+        margin-bottom: 2rem;
+    }
+    
     @keyframes fadeIn {
         from { opacity: 0; transform: translateY(10px); }
         to { opacity: 1; transform: translateY(0); }
@@ -137,10 +173,7 @@
     
     <div class="tab-container">
         <div class="tab-nav">
-            <button class="tab-button active" data-tab="tab-dc-data">
-                <i class="fas fa-database"></i> DC Data
-            </button>
-            <button class="tab-button" data-tab="tab-router-data">
+            <button class="tab-button active" data-tab="tab-router-data">
                 <i class="fas fa-info-circle"></i> Router Data
             </button>
             <button class="tab-button" data-tab="tab-router-rules">
@@ -148,54 +181,129 @@
             </button>
         </div>
         
-        <!-- DC Data Tab -->
-        <div class="tab-content active" id="tab-dc-data">
-            <div class="data-section">
-                <div class="table-container">
-                    <table class="data-table" id="dc-data-table">
-                        <thead>
-                            <tr>
-                                {% for key in dc_data[0].keys() %}
-                                <th>{{ key }}</th>
-                                {% endfor %}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for row in dc_data %}
-                            <tr>
-                                {% for value in row.values() %}
-                                <td>{{ value }}</td>
-                                {% endfor %}
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-        
         <!-- Router Data Tab -->
-        <div class="tab-content" id="tab-router-data">
+        <div class="tab-content active" id="tab-router-data">
             <div class="data-section">
+                <h2 class="section-title"><i class="fas fa-info-circle"></i> Router Data for {{ cluster_name }}</h2>
                 <div class="table-container">
+                    {% if router_data and 'error' not in router_data[0] %}
                     <table class="data-table" id="router-data-table">
                         <thead>
                             <tr>
-                                {% for key in router_data[0].keys() %}
-                                <th>{{ key }}</th>
-                                {% endfor %}
+                                <th>Cluster</th>
+                                <th>ID</th>
+                                <th>Timestamp</th>
+                                <th>MAC</th>
+                                <th>Number of Ports</th>
+                                <th>Latest Timestamp</th>
+                                <th>Oldest Timestamp</th>
+                                <th>Total Packets</th>
+                                <th>Total Bytes</th>
+                                <th>Total Errors</th>
+                                <th>Total Rx Packets</th>
+                                <th>Total Rx Bytes</th>
+                                <th>Total Rx Errors</th>
+                                <th>Total Tx Packets</th>
+                                <th>Total Tx Bytes</th>
+                                <th>Total Tx Errors</th>
+                                <th>Total Rx Utilization</th>
+                                <th>Total Tx Utilization</th>
+                                <th>Total Throughput (Mbps)</th>
+                                <th>Total Buffer Occupancy</th>
+                                <th>Min Rx Packets</th>
+                                <th>Max Rx Packets</th>
+                                <th>Min Rx Bytes</th>
+                                <th>Max Rx Bytes</th>
+                                <th>Min Rx Errors</th>
+                                <th>Max Rx Errors</th>
+                                <th>Min Tx Packets</th>
+                                <th>Max Tx Packets</th>
+                                <th>Min Tx Bytes</th>
+                                <th>Max Tx Bytes</th>
+                                <th>Min Tx Errors</th>
+                                <th>Max Tx Errors</th>
+                                <th>Min Rx Utilization</th>
+                                <th>Max Rx Utilization</th>
+                                <th>Min Tx Utilization</th>
+                                <th>Max Tx Utilization</th>
+                                <th>Min Throughput (Mbps)</th>
+                                <th>Max Throughput (Mbps)</th>
+                                <th>Min Buffer Occupancy</th>
+                                <th>Max Buffer Occupancy</th>
+                                <th>Average Rx Packets</th>
+                                <th>Average Rx Bytes</th>
+                                <th>Average Rx Errors</th>
+                                <th>Average Tx Packets</th>
+                                <th>Average Tx Bytes</th>
+                                <th>Average Tx Errors</th>
+                                <th>Average Rx Utilization</th>
+                                <th>Average Tx Utilization</th>
+                                <th>Average Throughput (Mbps)</th>
+                                <th>Average Buffer Occupancy</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for row in router_data %}
                             <tr>
-                                {% for value in row.values() %}
-                                <td>{{ value }}</td>
-                                {% endfor %}
+                                <td>{{ row.get('Cluster', '') }}</td>
+                                <td>{{ row.get('ID', '') }}</td>
+                                <td>{{ row.get('Timestamp', '') }}</td>
+                                <td>{{ row.get('MAC', '') }}</td>
+                                <td>{{ row.get('Number of Ports', '') }}</td>
+                                <td>{{ row.get('Latest Timestamp', '') }}</td>
+                                <td>{{ row.get('Oldest Timestamp', '') }}</td>
+                                <td>{{ row.get('Total Packets', '') }}</td>
+                                <td>{{ row.get('Total Bytes', '') }}</td>
+                                <td>{{ row.get('Total Errors', '') }}</td>
+                                <td>{{ row.get('Total Rx Packets', '') }}</td>
+                                <td>{{ row.get('Total Rx Bytes', '') }}</td>
+                                <td>{{ row.get('Total Rx Errors', '') }}</td>
+                                <td>{{ row.get('Total Tx Packets', '') }}</td>
+                                <td>{{ row.get('Total Tx Bytes', '') }}</td>
+                                <td>{{ row.get('Total Tx Errors', '') }}</td>
+                                <td>{{ row.get('Total Rx Utilization', '') }}</td>
+                                <td>{{ row.get('Total Tx Utilization', '') }}</td>
+                                <td>{{ row.get('Total Throughput (Mbps)', '') }}</td>
+                                <td>{{ row.get('Total Buffer Occupancy', '') }}</td>
+                                <td>{{ row.get('Min Rx Packets', '') }}</td>
+                                <td>{{ row.get('Max Rx Packets', '') }}</td>
+                                <td>{{ row.get('Min Rx Bytes', '') }}</td>
+                                <td>{{ row.get('Max Rx Bytes', '') }}</td>
+                                <td>{{ row.get('Min Rx Errors', '') }}</td>
+                                <td>{{ row.get('Max Rx Errors', '') }}</td>
+                                <td>{{ row.get('Min Tx Packets', '') }}</td>
+                                <td>{{ row.get('Max Tx Packets', '') }}</td>
+                                <td>{{ row.get('Min Tx Bytes', '') }}</td>
+                                <td>{{ row.get('Max Tx Bytes', '') }}</td>
+                                <td>{{ row.get('Min Tx Errors', '') }}</td>
+                                <td>{{ row.get('Max Tx Errors', '') }}</td>
+                                <td>{{ row.get('Min Rx Utilization', '') }}</td>
+                                <td>{{ row.get('Max Rx Utilization', '') }}</td>
+                                <td>{{ row.get('Min Tx Utilization', '') }}</td>
+                                <td>{{ row.get('Max Tx Utilization', '') }}</td>
+                                <td>{{ row.get('Min Throughput (Mbps)', '') }}</td>
+                                <td>{{ row.get('Max Throughput (Mbps)', '') }}</td>
+                                <td>{{ row.get('Min Buffer Occupancy', '') }}</td>
+                                <td>{{ row.get('Max Buffer Occupancy', '') }}</td>
+                                <td>{{ row.get('Average Rx Packets', '') }}</td>
+                                <td>{{ row.get('Average Rx Bytes', '') }}</td>
+                                <td>{{ row.get('Average Rx Errors', '') }}</td>
+                                <td>{{ row.get('Average Tx Packets', '') }}</td>
+                                <td>{{ row.get('Average Tx Bytes', '') }}</td>
+                                <td>{{ row.get('Average Tx Errors', '') }}</td>
+                                <td>{{ row.get('Average Rx Utilization', '') }}</td>
+                                <td>{{ row.get('Average Tx Utilization', '') }}</td>
+                                <td>{{ row.get('Average Throughput (Mbps)', '') }}</td>
+                                <td>{{ row.get('Average Buffer Occupancy', '') }}</td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
+                    {% else %}
+                    <div class="empty-message">
+                        <p>No router data available for {{ cluster_name }}.</p>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -203,25 +311,34 @@
         <!-- Router Rules Tab -->
         <div class="tab-content" id="tab-router-rules">
             <div class="data-section">
+                <h2 class="section-title"><i class="fas fa-list-ul"></i> Router Rules for {{ cluster_name }}</h2>
                 <div class="table-container">
+                    {% if router_rules and 'error' not in router_rules[0] %}
                     <table class="data-table" id="router-rules-table">
                         <thead>
                             <tr>
-                                {% for key in router_rules[0].keys() %}
-                                <th>{{ key }}</th>
-                                {% endfor %}
+                                <th>Cluster</th>
+                                <th>ID</th>
+                                <th>Timestamp</th>
+                                <th>Rule</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for row in router_rules %}
                             <tr>
-                                {% for value in row.values() %}
-                                <td>{{ value }}</td>
-                                {% endfor %}
+                                <td>{{ row.get('Cluster', '') }}</td>
+                                <td>{{ row.get('ID', '') }}</td>
+                                <td>{{ row.get('Timestamp', '') }}</td>
+                                <td>{{ row.get('Rule', '') }}</td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
+                    {% else %}
+                    <div class="empty-message">
+                        <p>No router rules available for {{ cluster_name }}.</p>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
