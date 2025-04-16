@@ -11,19 +11,21 @@ class HealthMonitoringSwitch(OVSKernelSwitch):
         self.last_stats_time = None
         self.initial_stats = {}
 
-    def start(self, *args, **kwargs):
-        """Start the switch and record the current time."""
-        super().start(*args, **kwargs)
-        self.last_stats_time = time.time()
+    # def start(self, *args, **kwargs):
+    #     """Start the switch and record the current time."""
+    #     super().start(*args, **kwargs)
+    #     self.last_stats_time = time.time()
 
     def capture_initial_stats(self):
         """Capture initial port statistics for rate calculations."""
         self.initial_stats = self._get_port_stats()
+        self.last_stats_time = None
 
     def _get_port_stats(self):
         """Retrieve current port statistics using ovs-ofctl."""
         stats = {}
         output = self.cmd(f'ovs-ofctl dump-ports {self.name}')
+        # print("output: ",output)
         # Split output into port sections:
         port_sections = []
         current_section = []
@@ -44,7 +46,6 @@ class HealthMonitoringSwitch(OVSKernelSwitch):
             port_match = re.search(r'port\s+(?:"([^"]+)"|(\d+)):', port_line)
             if not port_match:
                 continue
-
             port_num = None
             if port_match.group(2) and port_match.group(2).isdigit():
                 port_num = int(port_match.group(2))
@@ -84,8 +85,10 @@ class HealthMonitoringSwitch(OVSKernelSwitch):
         Returns a dictionary keyed by port number.
         """
         if self.last_stats_time is None:
-            info(f"Warning: {self.name} hasn't been started properly for health monitoring.\n")
-            return {}
+            self.initial_stats = self._get_port_stats()
+            self.last_stats_time = time.time()
+            time.sleep(duration)
+
         current_time = time.time()
         elapsed_time = current_time - self.last_stats_time
         if elapsed_time < duration:
@@ -94,6 +97,9 @@ class HealthMonitoringSwitch(OVSKernelSwitch):
             elapsed_time = current_time - self.last_stats_time
         current_stats = self._get_port_stats()
         health_data = {}
+        # print("Initial stats ports: ", list(self.initial_stats.keys()))
+        # print("Current stats ports: ", list(current_stats.keys()))
+
         for port, current in current_stats.items():
             if port in self.initial_stats:
                 initial = self.initial_stats[port]
@@ -126,6 +132,7 @@ class HealthMonitoringSwitch(OVSKernelSwitch):
         self.initial_stats = current_stats
         self.last_stats_time = current_time
 
+        # print("Health Data: ", health_data)
         return health_data
 
 
