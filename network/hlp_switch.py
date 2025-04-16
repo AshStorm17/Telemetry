@@ -28,6 +28,8 @@ def build_payload(is_switch, mac, port_stats, timestamp):
             f"""Port {port['port_id']}: Rxpkts={port['rxpkts']}, Rxbytes={port['rxbytes']}, Rxerrs={port['rxerrs']}, Txpkts={port['txpkts']}, Txbytes={port['txbytes']}, Txerrs={port['txerrs']}, rx_util={port["rx_utilization"]}, tx_util={port["tx_utilization"]}, throughput (mbps)={port["throughput (mbps)"]}, buffer_occ={port["buffer_occ"]}, """
         )
         # Calculate checksum
+        if port["buffer_occ"] == None:
+            port["buffer_occ"] = 0
         checksum = (
             port['rxpkts'] + port['rxbytes'] + port['rxerrs'] +
             port['txpkts'] + port['txbytes'] + port['txerrs'] +
@@ -86,7 +88,7 @@ class EnhancedSwitch:
         Build the custom readable payload and send it as a UDP packet using Scapy,
         encapsulated in an Ethernet frame.
         """
-        now = datetime.datetime.utcnow()
+        now = datetime.datetime.now()
         port_stats = self.get_port_stats()
         # Build the payload
         payload_str = build_payload(is_switch=True, mac=self.host.MAC(), port_stats=port_stats, timestamp=now)
@@ -96,6 +98,7 @@ class EnhancedSwitch:
         iface = self.host.intfNames()[0]
         src_mac = self.host.MAC()
         dst_mac = cc.MAC()
+        # print(f"Sending from source mac: {src_mac} to dest mac: {dst_mac}")
         
         cmd = (
             'python3 -c "'
