@@ -65,12 +65,12 @@ def build_router_payload(mac, routing_info, timestamp):
         route_lines.append(
             f"Route: Dest: {destination}, Gateway: {gateway}, Dev: {device}, Proto: {protocol}, Scope: {scope}, Src: {src}"
         )
-        ospf_neighbors = routing_info.get("Ospf Neighbors", "N/A")
-        ospf_state = routing_info.get("Ospf State", "N/A")
-        bgp_data = routing_info.get("BGP Data", "N/A")
-        route_lines.append(
-            f"Routing Protocols: OSPF Neighbors: {ospf_neighbors}, OSPF State: {ospf_state}, BGP Data: {bgp_data}"
-        )
+        # ospf_neighbors = routing_info.get("Ospf Neighbors", "N/A")
+        # ospf_state = routing_info.get("Ospf State", "N/A")
+        # bgp_data = routing_info.get("BGP Data", "N/A")
+        # route_lines.append(
+        #     f"Routing Protocols: OSPF Neighbors: {ospf_neighbors}, OSPF State: {ospf_state}, BGP Data: {bgp_data}"
+        # )
         
     footer = "ROUTER PACKET ENDED"
     # Join the payload without checksum
@@ -133,7 +133,7 @@ class EnhancedRouter:
         Build the custom readable payload and send it as a UDP packet using Scapy,
         encapsulated in an Ethernet frame.
         """
-        now = datetime.datetime.utcnow()
+        now = datetime.datetime.now()
         interface_stats = self.get_interface_stats()
         # Build the payload; mark is_switch as False for a router.
         payload_str = build_payload(is_switch=False, mac=self.router.MAC(), interface_stats=interface_stats, timestamp=now)
@@ -158,7 +158,7 @@ class EnhancedRouter:
         Retrieve routing information from the router, build a payload containing the routing details,
         and send it as a UDP packet using Scapy encapsulated in an Ethernet frame.
         """
-        now = datetime.datetime.utcnow()
+        now = datetime.datetime.now()
         # Use the updated get_routing_information function from HealthMonitoringRouter
         routing_info = self.router.get_routing_information()
         payload_str = build_router_payload(mac=self.router.MAC(), routing_info=routing_info, timestamp=now)
@@ -167,6 +167,7 @@ class EnhancedRouter:
         iface = self.router.intfNames()[0]
         src_mac = self.router.MAC()
         dst_mac = cc.MAC()
+        # print(f"Sending router data from source mac: {src_mac} to dest mac: {dst_mac}")
         
         cmd = (
             'python3 -c "'
@@ -175,5 +176,5 @@ class EnhancedRouter:
             f"sendp(pkt, iface='{iface}')"
             '"'
         )
-        print("Payload: ", payload_bytes)
+        # print("Payload: ", payload_bytes)
         self.router.cmd(cmd)
