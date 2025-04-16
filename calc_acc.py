@@ -79,7 +79,7 @@ index = faiss.IndexFlatL2(dimension)
 index.add(train_vectors)
 distances, indices = index.search(test_vectors, 5)
 
-valid = 0
+tp = fp = tn = fn = 0
 for i in range(len(test_vectors)):
     attack = False
     attack_type = []
@@ -102,11 +102,23 @@ for i in range(len(test_vectors)):
         if len(attack_type) > 0:
             act_attack = attack_type[-1]
         if test_vals[i] != 'nil':
-            valid += 1
+            tp += 1
+        else:
+            fp += 1
 #        print(f"pred: {act_attack}, actual: {test_vals[i]}")
     else:
         if test_vals[i] == 'nil':
-            valid += 1
+            tn += 1
+        else:
+            fn += 1
 #        print(f"pred: nil, actual: {test_vals[i]}")
 
-print(f"Attack Detection Accuracy: {(valid/len(test_vectors))*100}%")
+prec = (tp/(tp+fp))*100
+recall = (tp/(tp+fn))*100
+f1 = 2*prec*recall/(prec+recall)
+print("Attack Detection Statistics")
+print("---------------------------")
+print(f"Accuracy: {((tp+tn)/(tp+tn+fp+fn))*100:.2f}%")
+print(f"Precision: {prec:.2f}%")
+print(f"Recall: {recall:.2f}%")
+print(f"F1-Score: {f1:.2f}%")
