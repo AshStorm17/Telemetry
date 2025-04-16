@@ -118,9 +118,9 @@ class EnhancedFirewall:
         iface = self.firewall.intfNames()[0]
         src_mac = self.firewall.MAC()
         dst_mac = dest.MAC()
-        print(src_mac, "src_mac")
-        print(dst_mac, "dest_mac")
-        print(iface, "iface")
+        #print(src_mac, "src_mac")
+        #print(dst_mac, "dest_mac")
+        #print(iface, "iface")
         # print(payload_bytes)
         cmd = (
             'python3 -c "'
