@@ -26,6 +26,7 @@ def parse_csv(filename):
 
             for _ in range(num_macs):
                 mac = row[index]
+                print(mac)
                 stats = {}
                 stats['Number of Ports'] = row[index + 1]
                 stats['Latest Timestamp'] = f"{row[index + 2]} {row[index + 3]}"
@@ -58,7 +59,7 @@ def parse_csv(filename):
                     db.session.add(telemetry_entry)
                 
                 swstats[mac] = stats
-                index += 6 + len(keys)
+                index += 6 + len(keys) + 4
 
             swstats_dicts.append({
                 'CC_Name': CC_Name,
