@@ -26,7 +26,6 @@ def parse_csv(filename):
 
             for _ in range(num_macs):
                 mac = row[index]
-                print(mac)
                 stats = {}
                 stats['Number of Ports'] = row[index + 1]
                 stats['Latest Timestamp'] = f"{row[index + 2]} {row[index + 3]}"

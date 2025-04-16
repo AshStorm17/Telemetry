@@ -66,7 +66,7 @@ def generate_live_graphs(session, filename_prefix="network_stats"):
 
 def generate_graph(file, filename_prefix="network_stats"):
     """
-    Generate graphs for each MAC and each parameter using parsed CSV data.
+    Generate graphs for each CC name and each parameter using parsed CSV data.
     """
     base_path = '../static/graphs'
     os.makedirs(base_path, exist_ok=True)
@@ -78,59 +78,72 @@ def generate_graph(file, filename_prefix="network_stats"):
 
     for packet in data:
         timestamp = packet['Timestamp']
+        cc_name = packet['CC_Name']  # Use CC_Name from the packet
+        if not cc_name:
+            continue
+
+        # Initialize graph data for the CC name if not already done
+        if cc_name not in results:
+            results[cc_name] = {}
+
         for mac, stats in packet['Stats'].items():
             for parameter_name, value in stats.items():
-                # Initialize graph data for each MAC and parameter if not already done
-                if (mac, parameter_name) not in results:
-                    results[(mac, parameter_name)] = {
+                # Initialize parameter data if not already done
+                if parameter_name not in results[cc_name]:
+                    results[cc_name][parameter_name] = {
                         'x_vals': [],
                         'y_vals': []
                     }
 
                 # Append timestamp and value to the graph data
-                results[(mac, parameter_name)]['x_vals'].append(timestamp)
-                results[(mac, parameter_name)]['y_vals'].append(float(value) if value.replace('.', '', 1).isdigit() else 0.0)
+                results[cc_name][parameter_name]['x_vals'].append(timestamp)
+                results[cc_name][parameter_name]['y_vals'].append(float(value) if value.replace('.', '', 1).isdigit() else 0.0)
 
-    # Generate graphs for each MAC and parameter
+    # Generate graphs for each CC name and parameter
     graph_paths = {}
-    for (mac, parameter_name), graph_data in results.items():
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(
-            x=graph_data['x_vals'],
-            y=graph_data['y_vals'],
-            mode='lines+markers',
-            name=f"{mac} - {parameter_name}"
-        ))
+    for cc_name, parameters in results.items():
+        for parameter_name, graph_data in parameters.items():
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(
+                x=graph_data['x_vals'],
+                y=graph_data['y_vals'],
+                mode='lines+markers',
+                name=f"{cc_name} - {parameter_name}"
+            ))
 
-        fig.update_layout(
-            title=f"{parameter_name} over Time for {mac}",
-            xaxis_title="Timestamp",
-            yaxis_title=parameter_name
-        )
+            fig.update_layout(
+                title=f"{parameter_name} over Time for {cc_name}",
+                xaxis_title="Timestamp",
+                yaxis_title=parameter_name
+            )
 
-        html_path = os.path.join(base_path, f"{filename_prefix}_{mac.replace(':', '-')}_{parameter_name.replace(' ', '_')}.html")
-        png_path = os.path.join(base_path, f"{filename_prefix}_{mac.replace(':', '-')}_{parameter_name.replace(' ', '_')}.png")
+            # Update filename to use cc_name instead of mac
+            html_path = os.path.join(base_path, f"{filename_prefix}_{cc_name.replace(':', '-')}_{parameter_name.replace(' ', '_')}.html")
+            png_path = os.path.join(base_path, f"{filename_prefix}_{cc_name.replace(':', '-')}_{parameter_name.replace(' ', '_')}.png")
 
-        fig.write_html(html_path)
-        fig.write_image(png_path)  # Requires `kaleido`
+            fig.write_html(html_path)
+            fig.write_image(png_path)  # Requires `kaleido`
 
-        graph_paths[f"{mac}_{parameter_name}"] = {
-            'html': html_path,
-            'png': png_path
-        }
+            if cc_name not in graph_paths:
+                graph_paths[cc_name] = {}
+            graph_paths[cc_name][parameter_name] = {
+                'html': html_path,
+                'png': png_path
+            }
 
     return graph_paths
-
     
 if __name__ == "__main__":
     with app.app_context():
         filename = '../network/dc_data.csv'
         try:
             results = generate_graph(filename, filename_prefix="network_stats")
-            for key, paths in results.items():
-                print(f"Generated {key} graphs:")
-                print(f" → HTML: {paths['html']}")
-                print(f" → PNG : {paths['png']}")
+            for cc_name, parameters in results.items():
+                print(f"Generated graphs for {cc_name}:")
+                for parameter_name, paths in parameters.items():
+                    print(f" → Parameter: {parameter_name}")
+                    print(f"   → HTML: {paths['html']}")
+                    print(f"   → PNG : {paths['png']}")
 
         except Exception as e:
             print(f"Error: {e}")
