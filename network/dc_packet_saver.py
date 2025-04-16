@@ -55,14 +55,6 @@ def append_to_csv(file_path, data):
         f.write(','.join(data) + '\n')
 
 def clean_section_lines(section, header_markers):
-    """
-    Given a telemetry section string, split it into lines and remove any header/footer markers.
-    
-    header_markers: list of strings that denote markers (e.g., "CC2DC PACKET STARTED", "CC2DC PACKET ENDED",
-    "CC2DC ROUTER PACKET STARTED", "CC2DC ROUTER PACKET ENDED").
-    
-    Returns a list of nonempty lines that are not markers.
-    """
     lines = section.splitlines()
     cleaned = [line.strip() for line in lines if line.strip() and not any(marker in line for marker in header_markers)]
     return '\n'.join(cleaned).split()

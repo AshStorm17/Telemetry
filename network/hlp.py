@@ -46,20 +46,12 @@ def build_payload(is_switch, mac, port_stats, timestamp):
 
 # --- Enhanced Switch Class Using Health Parameters ---
 class EnhancedSwitch:
-    """
-    Custom class to handle telemetry for a switch.
-    Uses live health parameters from the associated HealthMonitoringSwitch.
-    """
     def __init__(self, host, switch, parameters):
         self.host = host      # Telemetry host
         self.switch = switch  # HealthMonitoringSwitch instance
         self.parameters = parameters
 
     def get_port_stats(self):
-        """
-        Retrieve real-time port statistics by calling the switch’s get_health_parameters().
-        Then map them to a readable text format.
-        """
         health_data = self.switch.get_health_parameters(duration=1)
         port_stats = []
         for port, data in health_data.items():
@@ -82,10 +74,6 @@ class EnhancedSwitch:
 
 
     def send_health_parameters(self, cc):
-        """
-        Build the custom readable payload and send it as a UDP packet using Scapy,
-        encapsulated in an Ethernet frame.
-        """
         now = datetime.datetime.utcnow()
         port_stats = self.get_port_stats()
         # Build the payload

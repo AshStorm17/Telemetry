@@ -7,10 +7,6 @@ import statistics
 # Helper Functions
 
 def measure_buffer_occupancy(device, interface):
-    """
-    Attempts to calculate buffer occupancy for a given device interface.
-    Uses the 'tc -s qdisc' command on the specified interface.
-    """
     output = device.cmd(f"tc -s qdisc show dev {interface}")
     match = re.search(r'backlog\s+(\d+)b', output)
     if match:
@@ -19,10 +15,6 @@ def measure_buffer_occupancy(device, interface):
         return None
 
 def measure_cpu_utilization(device, duration):
-    """
-    Measures CPU usage over a specified duration by reading /proc/stat.
-    The CPU usage is computed as the percentage of non-idle time.
-    """
     stat1 = device.cmd("cat /proc/stat")
     # Parse first line (aggregated over all cores)
     fields = stat1.splitlines()[0].split()
@@ -51,10 +43,6 @@ def measure_cpu_utilization(device, duration):
     return cpu_usage_percent
 
 def measure_memory_usage(device):
-    """
-    Measures memory utilization by reading /proc/meminfo.
-    Returns the percentage of used memory.
-    """
     meminfo = device.cmd("cat /proc/meminfo")
     total = None
     available = None
@@ -71,32 +59,21 @@ def measure_memory_usage(device):
 # Health Monitoring for Routers
 
 class HealthMonitoringRouter(Node):
-    """Custom router that captures interface and system health parameters."""
     def __init__(self, name, **params):
         super().__init__(name, **params)
         self.last_stats_time = None
         self.initial_stats = {}
 
     def start(self):
-        """
-        Initialize the router, record the current time, and capture initial stats.
-        """
         # Perform any necessary initialization for the router
         # self.last_stats_time = time.time()  # Record the start time
         self.capture_initial_stats()  # Capture initial interface statistics
         info(f"{self.name} initialized and ready for health monitoring.\n")
 
     def capture_initial_stats(self):
-        """
-        Capture initial interface statistics for rate calculations.
-        """
         self.initial_stats = self._get_interface_stats()
 
     def _get_interface_stats(self):
-        """
-        Retrieve interface statistics using 'ip -s link show' for each interface.
-        Returns a dictionary keyed by interface name.
-        """
         stats = {}
         for intf in self.intfList():
             output = self.cmd(f"ip -s link show dev {intf}")
@@ -137,11 +114,6 @@ class HealthMonitoringRouter(Node):
         return stats
 
     def get_health_parameters(self, duration=5, link_capacity_bps=10e6):
-        """
-        Calculate per-interface rates and system resource usage over the given duration.
-        Also returns CPU and memory utilization.
-        Returns a dictionary keyed by interface name and overall system parameters.
-        """
         if self.last_stats_time is None:
             self.initial_stats = self._get_interface_stats()
             self.last_stats_time = time.time()
@@ -192,12 +164,6 @@ class HealthMonitoringRouter(Node):
         return health_data
 
     def get_routing_information(self):
-        """
-        Retrieve routing table information using the 'ip route' command.
-        Removes ANSI color codes from the output and parses each line into
-        a dictionary with keys: destination, gateway, device, protocol, scope, and src.
-        Returns a dictionary containing a list of routing entries and the raw output.
-        """
         import re
         # Regex pattern to remove ANSI escape sequences
         ansi_escape = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')

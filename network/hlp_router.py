@@ -84,26 +84,15 @@ def build_router_payload(mac, routing_info, timestamp):
 
 # --- Enhanced Router Class Using Health Parameters ---
 class EnhancedRouter:
-    """
-    Custom class to handle telemetry for a router.
-    Uses live health parameters from the associated HealthMonitoringRouter.
-    """
     def __init__(self, router, parameters):
         self.router = router  # HealthMonitoringRouter instance
         self.parameters = parameters
 
     def start(self):
-        """
-        Start the router and its health monitoring.
-        """
         # Start the router
         self.router.start()
     
     def get_interface_stats(self):
-        """
-        Retrieve real-time interface statistics by calling the router's get_health_parameters().
-        Then map them to a readable text format.
-        """
         health_data = self.router.get_health_parameters(duration=1)
         interface_stats = []
         # health_data is a dict keyed by interface names (and possibly system parameters)
@@ -129,10 +118,6 @@ class EnhancedRouter:
         return interface_stats
 
     def send_health_parameters(self, cc):
-        """
-        Build the custom readable payload and send it as a UDP packet using Scapy,
-        encapsulated in an Ethernet frame.
-        """
         now = datetime.datetime.now()
         interface_stats = self.get_interface_stats()
         # Build the payload; mark is_switch as False for a router.
@@ -154,10 +139,6 @@ class EnhancedRouter:
         self.router.cmd(cmd)
 
     def send_routing_parameters(self, cc):
-        """
-        Retrieve routing information from the router, build a payload containing the routing details,
-        and send it as a UDP packet using Scapy encapsulated in an Ethernet frame.
-        """
         now = datetime.datetime.now()
         # Use the updated get_routing_information function from HealthMonitoringRouter
         routing_info = self.router.get_routing_information()

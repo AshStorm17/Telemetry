@@ -82,34 +82,17 @@ def build_firewall_rules_payload(mac, rule_details, timestamp):
     return full_payload
 
 class EnhancedFirewall:
-    """
-    Custom class to handle telemetry for a firewall.
-    Provides functions to send both overall health data and detailed firewall rules.
-    """
     def __init__(self, firewall, parameters):
-        """
-        :param firewall: An instance of HealthMonitoringFirewall.
-        :param parameters: A dictionary of parameters (if any).
-        """
         self.firewall = firewall
         self.parameters = parameters
 
     def start(self):
-        """
-        Start the underlying firewall and initialize telemetry.
-        """
         self.firewall.start()
 
     def get_health_data(self, duration=5):
-        """
-        Retrieve the health parameters from the firewall.
-        """
         return self.firewall.get_health_parameters(duration=duration)
 
     def get_rule_details(self):
-        """
-        Retrieve the detailed firewall rules as a raw string.
-        """
         return self.firewall.get_firewall_rules()
 
     def send_health_parameters(self, dest):

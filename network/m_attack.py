@@ -38,13 +38,6 @@ class CustomTopo(Topo):
         self.addLink(s1, dcs)
 
 def syn_flood_attack(target_ip, target_port, stop_event, source_ip=None):
-    """
-    Perform a SYN flood attack on the target IP and port.
-    :param target_ip: The IP address of the target.
-    :param target_port: The port to target on the victim.
-    :param stop_event: A threading event to stop the attack.
-    :param source_ip: Optional spoofed source IP address.
-    """
     print(f"Starting custom SYN flood attack on {target_ip}:{target_port}...")
     while not stop_event.is_set():
         try:
