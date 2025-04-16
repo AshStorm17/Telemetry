@@ -105,14 +105,14 @@ def cluster(cluster_id):
     
     # Set cluster path based on cluster ID
     if cluster_id == 1:
-        cluster_prefix = "1e-97"
-        full_path = "1e-97-ec-b3-cc-5f"
+        cluster_prefix = "cc1"
+        full_path = "cc1"
     elif cluster_id == 2:
-        cluster_prefix = "2e-bc"
-        full_path = "2e-bc-ec-b3-cc-5f"
+        cluster_prefix = "cc2"
+        full_path = "cc2"
     elif cluster_id == 3:
-        cluster_prefix = "3e-ad"
-        full_path = "3e-ad-ec-b3-cc-5f"
+        cluster_prefix = "cc3"
+        full_path = "cc3"
     else:
         cluster_prefix = "unknown"
         full_path = "unknown"
@@ -154,7 +154,7 @@ def cluster(cluster_id):
                 parts = first_file.split('_')
                 if len(parts) > 2:
                     # Extract the part after 'network_stats_' and before the next underscore
-                    alt_full_path = '_'.join(parts[1:3])
+                    alt_full_path = '_'.join(parts[2:3])
                     
                     # Update graph files dictionary with the alternative path
                     graph_files = {
