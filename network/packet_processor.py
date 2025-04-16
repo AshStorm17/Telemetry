@@ -514,8 +514,7 @@ def find_firewall_packets_scapy(pcap_file):
         for packet in packets:
             if Raw in packet:
                 payload = packet[Raw].load.decode('utf-8', errors='ignore')
-                print("HI")
-                print(payload)
+           
                 if "FIREWALL PACKET STARTED" in payload and "FIREWALL PACKET ENDED" in payload:
                     payload_lines = payload.split("\n")
 
@@ -525,7 +524,7 @@ def find_firewall_packets_scapy(pcap_file):
 
                     # Extract the MAC address
                     mac_line = payload_lines[2]
-                    print("MAC LINE: ",mac_line)
+            
                     mac = mac_line.split(": ")[1]
 
                     num_intf_line = payload_lines[3]
@@ -1100,8 +1099,6 @@ if __name__ == "__main__":
 
     pcap_file_path = args.pcap_file
     CC_Name = args.CC_Name
-    print("CC_NAME: ", CC_Name)
-    print("HI1")
     swstats = find_switch_packets_scapy(pcap_file_path)
     rtstats = find_router_packets_scapy(pcap_file_path)
     rtrstats = find_router_rules_packets_scapy(pcap_file_path)
